@@ -10,13 +10,16 @@ use App\Models\Product;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 final class OrdersResource extends Resource
 {
@@ -129,6 +132,13 @@ final class OrdersResource extends Resource
                 TextInput::make('download_url')
                     ->label('Download URL')
                     ->url(),
+
+                Textarea::make('selection_metadata')
+                    ->label('Version selection')
+                    ->formatStateUsing(fn ($state): string => json_encode($state ?: [], JSON_PRETTY_PRINT))
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -138,7 +148,7 @@ final class OrdersResource extends Resource
             ->columns([
                 TextColumn::make('id')->label('ID')->sortable(),
                 TextColumn::make('user.email')->label('Customer')->searchable(),
-                TextColumn::make('product_slug')->label('Product')->sortable(),
+                TextColumn::make('product_slug')->label('Product')->sortable()->searchable(),
                 TextColumn::make('amount_usd')->label('Amount USD')->money('usd'),
                 TextColumn::make('promo_code')->label('Promo'),
                 TextColumn::make('api_status')->label('Status')->badge()->color(fn (string $state): string => match ($state) {
@@ -156,6 +166,16 @@ final class OrdersResource extends Resource
                         'paid' => 'Paid',
                         'fulfilled' => 'Fulfilled',
                     ]),
+                Filter::make('purchased_at')
+                    ->form([
+                        \Filament\Forms\Components\DatePicker::make('from')->label('Purchased from'),
+                        \Filament\Forms\Components\DatePicker::make('until')->label('Purchased until'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['from'] ?? null, fn (Builder $q, $date) => $q->whereDate('purchased_at', '>=', $date))
+                            ->when($data['until'] ?? null, fn (Builder $q, $date) => $q->whereDate('purchased_at', '<=', $date));
+                    }),
             ])
             ->actions([
                 Action::make('mark_fulfilled')

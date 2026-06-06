@@ -23,6 +23,7 @@ Route::middleware('api.jwt')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::get('/auth/orders', [AuthController::class, 'orders']);
+    Route::post('/checkout/static-intent', [CheckoutController::class, 'staticIntent'])->middleware('throttle:60,1');
 });
 
 Route::post('/license/activate', [LicenseController::class, 'activate'])

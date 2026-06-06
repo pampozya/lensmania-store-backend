@@ -40,8 +40,10 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->pages([
                 Pages\Dashboard::class,
+                \App\Filament\Pages\PromoPerformance::class,
             ])
             ->widgets([
+                \App\Filament\Widgets\StoreStatsOverview::class,
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
             ])

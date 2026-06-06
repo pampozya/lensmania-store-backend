@@ -26,6 +26,7 @@ class Order extends Model
         'promo_code',
         'license_key',
         'download_url',
+        'selection_metadata',
         'affiliate_id',
         'purchased_at',
         'paid_at',
@@ -36,6 +37,7 @@ class Order extends Model
         'amount_usd' => 'float',
         'paid_at' => 'datetime',
         'purchased_at' => 'datetime',
+        'selection_metadata' => 'array',
     ];
 
     public function user()

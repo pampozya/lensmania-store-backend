@@ -118,6 +118,7 @@ class AuthController extends Controller
             'status' => $order->derived_status,
             'license_key' => $order->license_key,
             'download_url' => $order->download_url,
+            'selection_metadata' => $order->selection_metadata,
             'purchased_at' => optional($order->purchased_at)->toIso8601String(),
         ];
     }
