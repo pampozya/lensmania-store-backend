@@ -1,33 +1,38 @@
-FROM dunglas/frankenphp:php8.3
+FROM php:8.3-apache
 
-RUN install-php-extensions pdo_pgsql intl zip bcmath pcntl opcache
+# System deps + PHP extensions (intl, zip for Filament; pdo_pgsql for Postgres)
+RUN apt-get update && apt-get install -y \
+    git curl libpq-dev libonig-dev libxml2-dev libicu-dev libzip-dev zip unzip \
+    && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath intl zip opcache \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-COPY --chown=www-data:www-data . /app
+# Apache: enable rewrite, point docroot at Laravel's public/, listen on Render's port 10000
+RUN a2enmod rewrite
+RUN sed -ri 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf \
+    && sed -ri 's!/var/www/html!/var/www/html/public!g' /etc/apache2/apache2.conf
+RUN sed -ri 's/Listen 80/Listen 10000/' /etc/apache2/ports.conf \
+    && sed -ri 's/:80>/:10000>/' /etc/apache2/sites-available/000-default.conf
 
-WORKDIR /app
+# Allow .htaccess overrides in public/
+RUN printf '<Directory /var/www/html/public>\n    AllowOverride All\n    Require all granted\n</Directory>\n' > /etc/apache2/conf-available/laravel.conf \
+    && a2enconf laravel
 
-RUN mkdir -p storage/framework/cache \
-    storage/framework/sessions \
-    storage/framework/views \
-    storage/logs \
-    bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+WORKDIR /var/www/html
+
+COPY --chown=www-data:www-data . /var/www/html
+
+RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
 
 RUN composer install --no-dev --optimize-autoloader
 
-# Assets are committed in repo (public/css, public/js, public/vendor); refresh them
-# but never fail the build if these maintenance commands error.
+# Refresh Filament assets (also committed in repo as a fallback)
 RUN php artisan filament:assets || true
-
-# Grant the frankenphp binary permission to bind ports (Render runs as non-root;
-# the default php entrypoint strips this, causing "exec frankenphp: Operation not permitted").
-RUN setcap 'cap_net_bind_service=+ep' /usr/local/bin/frankenphp || true
 
 EXPOSE 10000
 
-# Reset entrypoint so frankenphp is exec'd directly, not wrapped by docker-php-entrypoint.
-ENTRYPOINT []
-
-CMD ["frankenphp", "php-server", "--root", "/app/public", "--listen", ":10000"]
+CMD ["apache2-foreground"]
