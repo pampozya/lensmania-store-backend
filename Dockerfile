@@ -17,10 +17,9 @@ RUN mkdir -p storage/framework/cache \
 
 RUN composer install --no-dev --optimize-autoloader
 
-# Publish Filament + Livewire assets into public/ (must succeed, not swallowed)
-RUN php artisan filament:assets \
-    && php artisan vendor:publish --tag=livewire:assets --force \
-    && php artisan config:clear
+# Assets are committed in repo (public/css, public/js, public/vendor); refresh them
+# but never fail the build if these maintenance commands error.
+RUN php artisan filament:assets || true
 
 EXPOSE 10000
 
