@@ -40,13 +40,7 @@ final class StorefrontPromosResource extends Resource
                         ->unique(ignorable: fn ($record) => $record)
                         ->uppercase()
                         ->placeholder('e.g., YOUSSEFVIP')
-                        ->helperText('Click Generate to create a unique shareable code automatically.')
-                        ->suffixAction(
-                            FormAction::make('generate')
-                                ->label('Generate')
-                                ->icon('heroicon-o-sparkles')
-                                ->action(fn (Set $set) => $set('code', self::generateUniqueCode()))
-                        )
+                        ->helperText('Leave blank and save to auto-generate a unique code (format: LM-XXXXXXXX)')
                         ->maxLength(255),
 
                     TextInput::make('label')
@@ -182,6 +176,15 @@ final class StorefrontPromosResource extends Resource
 
                 DeleteAction::make(),
             ]);
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => \App\Filament\Resources\StorefrontPromos\Pages\ListStorefrontPromos::route('/'),
+            'create' => \App\Filament\Resources\StorefrontPromos\Pages\CreateStorefrontPromo::route('/create'),
+            'edit' => \App\Filament\Resources\StorefrontPromos\Pages\EditStorefrontPromo::route('/{record}/edit'),
+        ];
     }
 
     private static function generateUniqueCode(): string
