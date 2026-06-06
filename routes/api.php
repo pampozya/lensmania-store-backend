@@ -5,11 +5,14 @@ use App\Http\Controllers\Download\DownloadController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\License\LicenseController;
+use App\Http\Controllers\PromoController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->get('/health', function () {
     return response()->json(['ok' => true]);
 });
+
+Route::get('/promos', [PromoController::class, 'index']);
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/checkout/quote', [CheckoutController::class, 'quote'])->name('checkout.quote')->middleware('throttle:60,1');
@@ -18,6 +21,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::post('/auth/signup', [AuthController::class, 'signup']);
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/google', [AuthController::class, 'google']);
 
 Route::middleware('api.jwt')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
