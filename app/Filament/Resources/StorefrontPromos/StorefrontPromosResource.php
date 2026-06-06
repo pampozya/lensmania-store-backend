@@ -4,7 +4,7 @@ namespace App\Filament\Resources\StorefrontPromos;
 
 use App\Models\StorefrontPromo;
 use Filament\Forms\Components\Actions\Action as FormAction;
-use Filament\Forms\Components\DateTimePickerField;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -115,7 +115,7 @@ final class StorefrontPromosResource extends Resource
             Section::make('Expiry')
                 ->columns(1)
                 ->schema([
-                    DateTimePickerField::make('expires_at')
+                    DateTimePicker::make('expires_at')
                         ->label('Expires At')
                         ->placeholder('Leave empty for no expiry')
                         ->nullable(),
