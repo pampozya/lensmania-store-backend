@@ -10,6 +10,8 @@ use App\Services\JwtService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -55,6 +57,66 @@ class AuthController extends Controller
 
         if (! $user || ! Hash::check($data['password'], (string) $user->password)) {
             return response()->json(['error' => 'Invalid credentials'], 401);
+        }
+
+        return response()->json([
+            'token' => $this->jwtService->issue($user),
+            'user' => [
+                'id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+            ],
+        ], 200);
+    }
+
+    public function google(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'credential' => ['required', 'string'],
+        ]);
+
+        $clientId = (string) config('services.google.client_id', '');
+        if ($clientId === '') {
+            return response()->json(['error' => 'Google login is not configured'], 500);
+        }
+
+        $response = Http::get('https://oauth2.googleapis.com/tokeninfo', [
+            'id_token' => $data['credential'],
+        ]);
+
+        if (! $response->ok()) {
+            return response()->json(['error' => 'Google sign-in failed'], 401);
+        }
+
+        $payload = $response->json();
+        if (($payload['aud'] ?? '') !== $clientId) {
+            return response()->json(['error' => 'Google sign-in failed'], 401);
+        }
+
+        $emailVerified = $payload['email_verified'] ?? false;
+        if (! ($emailVerified === true || $emailVerified === 'true' || $emailVerified === '1')) {
+            return response()->json(['error' => 'Google email is not verified'], 401);
+        }
+
+        $email = strtolower(trim((string) ($payload['email'] ?? '')));
+        if ($email === '') {
+            return response()->json(['error' => 'Google account email missing'], 401);
+        }
+
+        $name = trim((string) ($payload['name'] ?? ''));
+        if ($name === '') {
+            $name = $email;
+        }
+
+        $user = User::query()->where('email', $email)->first();
+
+        if (! $user) {
+            $user = User::create([
+                'name' => $name,
+                'email' => $email,
+                'password' => Str::random(32),
+                'email_verified_at' => now(),
+            ]);
         }
 
         return response()->json([
