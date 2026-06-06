@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Resources\Orders\OrdersResource;
 use App\Filament\Resources\Licenses\LicensesResource;
 use App\Filament\Resources\Users\UsersResource;
+use App\Filament\Resources\StorefrontPromos\StorefrontPromosResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -37,6 +38,7 @@ class AdminPanelProvider extends PanelProvider
                 OrdersResource::class,
                 UsersResource::class,
                 LicensesResource::class,
+                StorefrontPromosResource::class,
             ])
             ->pages([
                 Pages\Dashboard::class,
