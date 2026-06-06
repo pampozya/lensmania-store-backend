@@ -23,4 +23,6 @@ RUN php artisan filament:assets || true
 
 EXPOSE 10000
 
-CMD ["frankenphp", "php-server", "--root", "/app/public", "--listen", ":10000", "-v"]
+ENV SERVER_NAME=:10000
+
+CMD ["frankenphp", "php-server", "--root", "/app/public", "--listen", "0.0.0.0:10000"]
