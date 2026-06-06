@@ -33,14 +33,14 @@ services:
         sync: false
       - key: BROADCAST_CONNECTION
         value: log
-      - key: CACHE_DRIVER
-        value: database
+      - key: CACHE_STORE
+        value: file
       - key: FILESYSTEM_DISK
         value: local
       - key: QUEUE_CONNECTION
         value: database
       - key: SESSION_DRIVER
-        value: database
+        value: file
       - key: SESSION_LIFETIME
         value: 120
       - key: MAIL_MAILER
