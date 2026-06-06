@@ -3,11 +3,13 @@
 namespace App\Filament\Resources\StorefrontPromos;
 
 use App\Models\StorefrontPromo;
+use Filament\Forms\Components\Actions\Action as FormAction;
 use Filament\Forms\Components\DateTimePickerField;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
+use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
@@ -38,6 +40,13 @@ final class StorefrontPromosResource extends Resource
                         ->unique(ignorable: fn ($record) => $record)
                         ->uppercase()
                         ->placeholder('e.g., YOUSSEFVIP')
+                        ->helperText('Click Generate to create a unique shareable code automatically.')
+                        ->suffixAction(
+                            FormAction::make('generate')
+                                ->label('Generate')
+                                ->icon('heroicon-o-sparkles')
+                                ->action(fn (Set $set) => $set('code', self::generateUniqueCode()))
+                        )
                         ->maxLength(255),
 
                     TextInput::make('label')
@@ -173,5 +182,19 @@ final class StorefrontPromosResource extends Resource
 
                 DeleteAction::make(),
             ]);
+    }
+
+    private static function generateUniqueCode(): string
+    {
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+        do {
+            $code = 'LM-';
+            for ($i = 0; $i < 8; $i++) {
+                $code .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+            }
+        } while (StorefrontPromo::query()->where('code', $code)->exists());
+
+        return $code;
     }
 }
