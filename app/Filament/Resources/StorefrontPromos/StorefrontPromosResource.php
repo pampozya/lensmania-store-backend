@@ -28,6 +28,8 @@ final class StorefrontPromosResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Storefront Promos';
 
+    protected static ?string $slug = 'storefront-promos';
+
     public static function form(Form $form): Form
     {
         return $form->schema([
