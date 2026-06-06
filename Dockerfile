@@ -17,6 +17,10 @@ RUN mkdir -p storage/framework/cache \
 
 RUN composer install --no-dev --optimize-autoloader
 
+RUN php artisan filament:assets || true
+
 EXPOSE 10000
 
-CMD ["php", "-S", "0.0.0.0:10000", "-t", "public"]
+ENV SERVER_NAME=:10000
+
+CMD ["frankenphp", "php-server", "--root", "/app/public", "--listen", ":10000"]
