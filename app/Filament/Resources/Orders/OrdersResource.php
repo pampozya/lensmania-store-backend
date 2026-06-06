@@ -9,7 +9,6 @@ use App\Models\Order;
 use App\Models\Product;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
@@ -123,10 +122,9 @@ final class OrdersResource extends Resource
                     ->label('Purchased at')
                     ->default(now()),
 
-                Textarea::make('license_key')
+                TextInput::make('license_key')
                     ->label('License key')
-                    ->rows(2)
-                    ->columnSpanFull(),
+                    ->maxLength(255),
 
                 TextInput::make('download_url')
                     ->label('Download URL')

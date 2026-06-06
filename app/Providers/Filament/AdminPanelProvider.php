@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Resources\Orders\OrdersResource;
+use App\Filament\Resources\Licenses\LicensesResource;
 use App\Filament\Resources\Users\UsersResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -35,6 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->resources([
                 OrdersResource::class,
                 UsersResource::class,
+                LicensesResource::class,
             ])
             ->pages([
                 Pages\Dashboard::class,
