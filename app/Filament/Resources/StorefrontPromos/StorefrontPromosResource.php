@@ -38,9 +38,9 @@ final class StorefrontPromosResource extends Resource
                 ->schema([
                     TextInput::make('code')
                         ->label('Code')
-                        ->required()
                         ->unique(ignorable: fn ($record) => $record)
-                        ->uppercase()
+                        ->dehydrateStateUsing(fn (?string $state): ?string => $state ? strtoupper($state) : $state)
+                        ->extraInputAttributes(['style' => 'text-transform: uppercase'])
                         ->placeholder('e.g., YOUSSEFVIP')
                         ->helperText('Leave blank and save to auto-generate a unique code (format: LM-XXXXXXXX)')
                         ->maxLength(255),
