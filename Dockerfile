@@ -21,6 +21,13 @@ RUN composer install --no-dev --optimize-autoloader
 # but never fail the build if these maintenance commands error.
 RUN php artisan filament:assets || true
 
+# Grant the frankenphp binary permission to bind ports (Render runs as non-root;
+# the default php entrypoint strips this, causing "exec frankenphp: Operation not permitted").
+RUN setcap 'cap_net_bind_service=+ep' /usr/local/bin/frankenphp || true
+
 EXPOSE 10000
+
+# Reset entrypoint so frankenphp is exec'd directly, not wrapped by docker-php-entrypoint.
+ENTRYPOINT []
 
 CMD ["frankenphp", "php-server", "--root", "/app/public", "--listen", ":10000"]
