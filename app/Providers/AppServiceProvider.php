@@ -21,6 +21,10 @@ class AppServiceProvider extends ServiceProvider
 
         if ($this->app->environment('local')) {
             \Illuminate\Support\Facades\URL::forceScheme('http');
+        } else {
+            // Render/Cloudflare terminate TLS upstream; force HTTPS so Filament
+            // generates https:// asset URLs (avoids mixed-content blocking).
+            \Illuminate\Support\Facades\URL::forceScheme('https');
         }
     }
 }
