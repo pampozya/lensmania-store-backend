@@ -1,6 +1,6 @@
 FROM dunglas/frankenphp:php8.3
 
-RUN install-php-extensions pdo_pgsql intl zip bcmath pcntl
+RUN install-php-extensions pdo_pgsql intl zip bcmath pcntl opcache
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
@@ -21,6 +21,4 @@ RUN php artisan filament:assets || true
 
 EXPOSE 10000
 
-ENV SERVER_NAME=:10000
-
-CMD ["frankenphp", "php-server", "--root", "/app/public", "--listen", ":10000"]
+CMD ["frankenphp", "php-server", "--root", "/app/public", "--listen", ":10000", "-v"]
