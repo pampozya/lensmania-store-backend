@@ -1,0 +1,56 @@
+{
+  "name": "lensmania/store-backend",
+  "description": "Lensmania Labs standalone storefront and license backend",
+  "type": "project",
+  "require": {
+    "php": "^8.2",
+    "laravel/framework": "^11.0",
+    "laravel/breeze": "^2.3",
+    "filament/filament": "^3.0",
+    "spatie/laravel-backup": "^8.0",
+    "guzzlehttp/guzzle": "^7.8"
+  },
+  "require-dev": {
+    "fakerphp/faker": "^1.23",
+    "laravel/pint": "^1.17",
+    "laravel/tinker": "^3.0",
+    "mockery/mockery": "^1.6",
+    "pestphp/pest": "^2.34",
+    "pestphp/pest-plugin-laravel": "^2.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/",
+      "Database\\Seeders\\": "database/seeders/",
+      "Database\\Factories\\": "database/factories/"
+    }
+  },
+  "scripts": {
+    "post-autoload-dump": [
+      "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+      "@php artisan package:discover --ansi"
+    ],
+    "post-root-package-install": [
+      "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+      "@php artisan key:generate --ansi"
+    ],
+    "test": [
+      "@php artisan test"
+    ]
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true,
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

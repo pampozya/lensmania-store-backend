@@ -1,0 +1,16 @@
+/node_modules
+/public/build
+/vendor
+/.idea
+/.phpunit.result.cache
+/.vscode
+/.env
+/.env.local
+/.env.production
+/.env.testing
+/public/storage
+/storage/*.key
+/storage/framework/cache/data
+/storage/framework/sessions
+/storage/framework/views
+/storage/logs/*.log
