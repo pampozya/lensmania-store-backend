@@ -8,9 +8,14 @@ COPY --chown=www-data:www-data . /app
 
 WORKDIR /app
 
-RUN composer install --no-dev --optimize-autoloader
+RUN mkdir -p storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
-RUN chmod -R 775 storage bootstrap/cache
+RUN composer install --no-dev --optimize-autoloader
 
 EXPOSE 10000
 
