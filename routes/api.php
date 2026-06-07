@@ -16,6 +16,39 @@ Route::middleware('guest')->get('/health', function () {
 
 Route::get('/promos', [PromoController::class, 'index']);
 
+// TEMP diagnostic: send a test email and return the exact SMTP result.
+// Remove after debugging. Usage: /api/_mailtest?to=pampozya@gmail.com&key=lm-diag-2026
+Route::get('/_mailtest', function (\Illuminate\Http\Request $request) {
+    if ($request->query('key') !== 'lm-diag-2026') {
+        return response()->json(['error' => 'forbidden'], 403);
+    }
+    $to = $request->query('to', 'pampozya@gmail.com');
+    $config = [
+        'mailer'   => config('mail.default'),
+        'host'     => config('mail.mailers.smtp.host'),
+        'port'     => config('mail.mailers.smtp.port'),
+        'username' => config('mail.mailers.smtp.username'),
+        'from'     => config('mail.from.address'),
+        'from_name'=> config('mail.from.name'),
+        'password_set' => ! empty(config('mail.mailers.smtp.password')),
+    ];
+    try {
+        \Illuminate\Support\Facades\Mail::raw(
+            'Lensmania Labs SMTP diagnostic — if you received this, email delivery works. Time: ' . now(),
+            function ($m) use ($to) {
+                $m->to($to)->subject('Lensmania SMTP test');
+            }
+        );
+        return response()->json(['ok' => true, 'sent_to' => $to, 'config' => $config]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'ok' => false,
+            'error' => $e->getMessage(),
+            'config' => $config,
+        ], 500);
+    }
+});
+
 Route::post('/analytics/visit', [SiteVisitController::class, 'store'])
     ->middleware('throttle:120,1');
 
