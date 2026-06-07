@@ -13,6 +13,8 @@ final class AffiliatesResource extends Resource
 {
     protected static ?string $model = Affiliate::class;
 
+    protected static ?string $slug = 'affiliates';
+
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
     protected static ?string $navigationLabel = 'Affiliates';

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Checkout\CheckoutController;
 use App\Http\Controllers\Download\DownloadController;
 use App\Http\Controllers\Analytics\SiteVisitController;
+use App\Http\Controllers\Analytics\SiteEventController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\License\LicenseController;
@@ -17,6 +18,9 @@ Route::get('/promos', [PromoController::class, 'index']);
 
 Route::post('/analytics/visit', [SiteVisitController::class, 'store'])
     ->middleware('throttle:120,1');
+
+Route::post('/analytics/event', [SiteEventController::class, 'store'])
+    ->middleware('throttle:240,1');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/checkout/quote', [CheckoutController::class, 'quote'])->name('checkout.quote')->middleware('throttle:60,1');

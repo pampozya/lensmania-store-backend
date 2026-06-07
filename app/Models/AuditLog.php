@@ -22,4 +22,9 @@ class AuditLog extends Model
         'meta' => 'array',
         'created_at' => 'datetime',
     ];
+
+    public function actor()
+    {
+        return $this->belongsTo(User::class, 'actor_user_id');
+    }
 }

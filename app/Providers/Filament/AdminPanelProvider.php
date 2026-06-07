@@ -3,15 +3,33 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\AffiliatePayouts;
+use App\Filament\Pages\AffiliateScorecard;
+use App\Filament\Pages\AbandonedCheckout;
+use App\Filament\Pages\CohortAnalytics;
+use App\Filament\Pages\CustomerTimeline;
+use App\Filament\Pages\DeviceActivationMonitor;
+use App\Filament\Pages\DownloadHealth;
+use App\Filament\Pages\EmailDeliveryMonitor;
+use App\Filament\Pages\FraudRiskDashboard;
+use App\Filament\Pages\GeoHeatmap;
 use App\Filament\Pages\PayPalReconciliation;
+use App\Filament\Pages\PayPalCsvImporter;
+use App\Filament\Pages\ProductVersionAnalytics;
+use App\Filament\Pages\PromoLeaderboard;
+use App\Filament\Pages\RevenueForecast;
 use App\Filament\Pages\SalesOverview;
+use App\Filament\Pages\SalesFunnel;
 use App\Filament\Pages\SupportTools;
 use App\Filament\Pages\SystemHealth;
 use App\Filament\Pages\VisitAnalytics;
 use App\Filament\Resources\Affiliates\AffiliatesResource;
+use App\Filament\Resources\AuditLogs\AuditLogsResource;
 use App\Filament\Resources\DownloadTokens\DownloadTokensResource;
+use App\Filament\Resources\EmailDeliveryLogs\EmailDeliveryLogsResource;
+use App\Filament\Resources\LicenseDevices\LicenseDevicesResource;
 use App\Filament\Resources\Orders\OrdersResource;
 use App\Filament\Resources\Licenses\LicensesResource;
+use App\Filament\Resources\SupportNotes\SupportNotesResource;
 use App\Filament\Resources\Users\UsersResource;
 use App\Filament\Resources\StorefrontPromos\StorefrontPromosResource;
 use App\Filament\Widgets\OperationalRiskOverview;
@@ -54,16 +72,34 @@ class AdminPanelProvider extends PanelProvider
                 OrdersResource::class,
                 UsersResource::class,
                 LicensesResource::class,
+                LicenseDevicesResource::class,
                 AffiliatesResource::class,
                 DownloadTokensResource::class,
+                SupportNotesResource::class,
+                AuditLogsResource::class,
+                EmailDeliveryLogsResource::class,
                 StorefrontPromosResource::class,
             ])
             ->pages([
                 Pages\Dashboard::class,
                 SalesOverview::class,
+                RevenueForecast::class,
                 PayPalReconciliation::class,
+                PayPalCsvImporter::class,
                 AffiliatePayouts::class,
+                AffiliateScorecard::class,
                 VisitAnalytics::class,
+                SalesFunnel::class,
+                PromoLeaderboard::class,
+                AbandonedCheckout::class,
+                GeoHeatmap::class,
+                ProductVersionAnalytics::class,
+                CohortAnalytics::class,
+                CustomerTimeline::class,
+                DeviceActivationMonitor::class,
+                DownloadHealth::class,
+                FraudRiskDashboard::class,
+                EmailDeliveryMonitor::class,
                 SupportTools::class,
                 SystemHealth::class,
                 \App\Filament\Pages\PromoPerformance::class,

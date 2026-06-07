@@ -14,6 +14,8 @@ final class DownloadTokensResource extends Resource
 {
     protected static ?string $model = DownloadToken::class;
 
+    protected static ?string $slug = 'download-tokens';
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $navigationLabel = 'Download Delivery Logs';
