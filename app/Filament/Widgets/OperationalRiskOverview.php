@@ -12,6 +12,8 @@ class OperationalRiskOverview extends BaseWidget
 {
     protected static ?int $sort = 1;
 
+    protected static bool $isLazy = false;
+
     protected function getStats(): array
     {
         $pendingFulfillment = Order::query()->where('api_status', 'paid')->count();

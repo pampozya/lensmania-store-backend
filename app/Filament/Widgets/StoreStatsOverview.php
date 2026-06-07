@@ -11,6 +11,8 @@ class StoreStatsOverview extends BaseWidget
 {
     protected static ?int $sort = -3;
 
+    protected static bool $isLazy = false;
+
     protected function getStats(): array
     {
         // Revenue from fulfilled orders. Prefer amount_usd; fall back to amount_cents/100.

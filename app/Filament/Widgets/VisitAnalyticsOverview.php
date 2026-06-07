@@ -10,6 +10,8 @@ class VisitAnalyticsOverview extends BaseWidget
 {
     protected static ?int $sort = -4;
 
+    protected static bool $isLazy = false;
+
     protected function getStats(): array
     {
         $today = SiteVisit::query()->whereDate('created_at', now()->toDateString());
