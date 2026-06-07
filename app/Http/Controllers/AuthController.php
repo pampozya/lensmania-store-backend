@@ -159,18 +159,54 @@ class AuthController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
+        // Load all user licenses keyed by product_id for quick lookup
+        $licenses = \App\Models\License::where('user_id', $user->id)
+            ->get()
+            ->keyBy('product_id');
+
         $rows = Order::query()
+            ->with('product')
             ->where('user_id', $user->id)
             ->latest('purchased_at')
             ->latest('created_at')
             ->get()
-            ->map(fn (Order $order) => $this->formatOrder($order));
+            ->map(fn (Order $order) => $this->formatOrder($order, $licenses));
 
         return response()->json($rows, 200);
     }
 
-    private function formatOrder(Order $order): array
+    private function formatOrder(Order $order, \Illuminate\Support\Collection $licenses): array
     {
+        // For bundles, expand into one card per license
+        $product = $order->product;
+        $isBundleOrder = $product?->is_bundle || $order->product_slug === 'bundle';
+
+        if ($isBundleOrder) {
+            $items = \App\Models\BundleItem::where('bundle_product_id', $product->id)
+                ->with('itemProduct')
+                ->get();
+
+            $licenseCards = $items->map(function ($item) use ($licenses, $order) {
+                $license = $licenses->get($item->item_product_id);
+                return [
+                    'product_slug' => $item->itemProduct?->slug ?? 'unknown',
+                    'product_name' => $item->itemProduct?->name ?? 'Unknown',
+                    'license_key' => $license?->license_key,
+                    'license_status' => $license?->status ?? 'pending',
+                    'download_url' => null,
+                ];
+            })->values()->all();
+        } else {
+            $license = $licenses->get($product?->id);
+            $licenseCards = [[
+                'product_slug' => $order->product_slug,
+                'product_name' => $order->product_name,
+                'license_key' => $license?->license_key,
+                'license_status' => $license?->status ?? 'pending',
+                'download_url' => null,
+            ]];
+        }
+
         return [
             'id' => $order->id,
             'product_slug' => $order->product_slug,
@@ -178,8 +214,8 @@ class AuthController extends Controller
             'amount_usd' => $order->amount_usd,
             'promo_code' => $order->promo_code,
             'status' => $order->derived_status,
-            'license_key' => $order->license_key,
-            'download_url' => $order->download_url,
+            'is_bundle' => $isBundleOrder,
+            'licenses' => $licenseCards,
             'selection_metadata' => $order->selection_metadata,
             'purchased_at' => optional($order->purchased_at)->toIso8601String(),
         ];

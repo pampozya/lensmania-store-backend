@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\License;
 use App\Models\Order;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -20,24 +21,30 @@ class OrderFulfilled extends Mailable
 
     public function envelope(): Envelope
     {
-        $productName = config("downloads.products.{$this->order->product_slug}.name", 'Your Product');
-
         return new Envelope(
-            subject: "Your {$productName} License Key & Download",
+            subject: "Your {$this->order->product_name} License — Lensmania Labs",
         );
     }
 
     public function content(): Content
     {
-        $productName = config("downloads.products.{$this->order->product_slug}.name", 'Your Product');
-        $downloadUrl = config("downloads.products.{$this->order->product_slug}.url", '#');
+        // Gather all licenses for this user that relate to this order's product(s)
+        $licenses = License::where('user_id', $this->order->user_id)
+            ->with('product')
+            ->get()
+            ->map(fn ($lic) => [
+                'product_name' => $lic->product?->name ?? 'License',
+                'license_key'  => $lic->license_key,
+            ])
+            ->values()
+            ->all();
 
         return new Content(
             view: 'mail.order-fulfilled',
             with: [
-                'order' => $this->order,
-                'productName' => $productName,
-                'downloadUrl' => $downloadUrl,
+                'order'        => $this->order,
+                'licenses'     => $licenses,
+                'dashboardUrl' => 'https://labs.lensmania.ae/dashboard',
             ],
         );
     }

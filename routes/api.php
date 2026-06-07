@@ -24,6 +24,7 @@ Route::post('/analytics/event', [SiteEventController::class, 'store'])
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/checkout/quote', [CheckoutController::class, 'quote'])->name('checkout.quote')->middleware('throttle:60,1');
+    Route::post('/checkout/fulfill-pending', [CheckoutController::class, 'fulfillPending'])->middleware('throttle:10,1');
     Route::get('/account/downloads/{build}', [DownloadController::class, 'download'])->name('download.by_build');
 });
 

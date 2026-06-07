@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mail\OrderFulfilled;
 use App\Models\BundleItem;
 use App\Models\Entitlement;
 use App\Models\License;
@@ -9,6 +10,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\PriceQuote;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use RuntimeException;
 
 class FulfillmentService
@@ -151,7 +153,70 @@ class FulfillmentService
                 'capture_id' => $captureId,
                 'product_count' => count($productIds),
             ]);
+
+            // Send fulfillment email outside the transaction lock
+            $freshOrder = Order::with('user')->find($order->id);
+            if ($freshOrder?->user?->email) {
+                Mail::to($freshOrder->user->email)
+                    ->queue(new OrderFulfilled($freshOrder));
+            }
         });
+    }
+
+    /**
+     * Fulfill a static-PayPal order (staticIntent flow).
+     * Used when amount_usd = 0 (100% promo) or triggered manually from Filament.
+     */
+    public function fulfillStaticOrder(Order $order): bool
+    {
+        if (in_array($order->api_status, ['fulfilled', 'paid'], true)) {
+            return false; // Already done
+        }
+
+        DB::transaction(function () use ($order) {
+            $order->forceFill([
+                'status'     => 'paid',
+                'api_status' => 'fulfilled',
+                'paid_at'    => now(),
+            ])->save();
+
+            $productIds = $this->resolveProductIdsForOrder($order->product_id);
+
+            foreach ($productIds as $productId) {
+                Entitlement::firstOrCreate([
+                    'user_id'    => $order->user_id,
+                    'product_id' => $productId,
+                    'order_id'   => $order->id,
+                    'active'     => true,
+                ], ['active' => true]);
+
+                $exists = License::where('user_id', $order->user_id)
+                    ->where('product_id', $productId)
+                    ->exists();
+
+                if (! $exists) {
+                    License::create([
+                        'user_id'     => $order->user_id,
+                        'product_id'  => $productId,
+                        'license_key' => $this->buildLicenseKey($order->user_id, $productId, $order->id),
+                        'status'      => 'active',
+                    ]);
+                }
+            }
+
+            $this->auditService->logEvent('static_fulfillment_success', $order, [
+                'product_count' => count($productIds),
+            ]);
+        });
+
+        // Send email after transaction commits
+        $freshOrder = Order::with('user')->find($order->id);
+        if ($freshOrder?->user?->email) {
+            Mail::to($freshOrder->user->email)
+                ->queue(new OrderFulfilled($freshOrder));
+        }
+
+        return true;
     }
 
     private function resolveProductIdsForOrder(int $productId): array

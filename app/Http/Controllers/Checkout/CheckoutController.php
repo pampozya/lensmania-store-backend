@@ -12,6 +12,7 @@ use App\Services\FulfillmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
@@ -70,12 +71,50 @@ class CheckoutController extends Controller
             'purchased_at' => now(),
         ]);
 
+        // Auto-fulfill immediately for $0 orders (100% promo codes)
+        if ($amountCents === 0) {
+            try {
+                $this->fulfillmentService->fulfillStaticOrder($order);
+            } catch (\Throwable $e) {
+                Log::error('auto_fulfill_zero_order_failed', ['order_id' => $order->id, 'error' => $e->getMessage()]);
+            }
+        }
+
         return response()->json([
             'ok' => true,
             'order_id' => $order->id,
             'status' => $order->derived_status,
             'selection_metadata' => $order->selection_metadata,
         ], 201);
+    }
+
+    /**
+     * Called by the React thank-you page after returning from PayPal.
+     * Fulfills the most recent pending static order for the logged-in user.
+     */
+    public function fulfillPending(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $order = Order::where('user_id', $user->id)
+            ->where('api_status', 'pending')
+            ->latest('created_at')
+            ->first();
+
+        if (! $order) {
+            return response()->json(['ok' => true, 'message' => 'No pending orders']);
+        }
+
+        try {
+            $fulfilled = $this->fulfillmentService->fulfillStaticOrder($order);
+            return response()->json(['ok' => true, 'fulfilled' => $fulfilled, 'order_id' => $order->id]);
+        } catch (\Throwable $e) {
+            Log::error('fulfill_pending_failed', ['order_id' => $order->id, 'error' => $e->getMessage()]);
+            return response()->json(['ok' => false, 'error' => 'Fulfillment failed'], 500);
+        }
     }
 
     public function quote(CheckoutQuoteRequest $request): JsonResponse
