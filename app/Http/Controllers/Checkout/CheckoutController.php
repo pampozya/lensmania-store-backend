@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Checkout;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CheckoutQuoteRequest;
 use App\Http\Requests\CreatePaypalOrderRequest;
+use App\Jobs\FulfillOrder;
 use App\Models\Order;
 use App\Models\Product;
 use App\Services\CheckoutService;
@@ -71,12 +72,13 @@ class CheckoutController extends Controller
             'purchased_at' => now(),
         ]);
 
-        // Auto-fulfill immediately for $0 orders (100% promo codes)
-        // Wrapped in try/catch — fulfillment failure must never break the checkout response
+        // Auto-fulfill immediately for $0 orders (100% promo codes).
+        // Dispatched as a job so any exception cannot escape into this HTTP response.
+        // With QUEUE_CONNECTION=sync it runs immediately; with a worker it's async.
         $fulfillError = null;
         if ($amountCents === 0) {
             try {
-                $this->fulfillmentService->fulfillStaticOrder($order);
+                FulfillOrder::dispatch($order);
             } catch (\Throwable $e) {
                 $fulfillError = $e->getMessage();
                 report($e);
