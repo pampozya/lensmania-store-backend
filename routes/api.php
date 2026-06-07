@@ -33,6 +33,16 @@ Route::get('/_mailtest', function (\Illuminate\Http\Request $request) {
         'password_set' => ! empty(config('mail.mailers.smtp.password')),
     ];
     try {
+        // If ?order=ID is passed, send the REAL OrderFulfilled license email for that order.
+        if ($orderId = $request->query('order')) {
+            $order = \App\Models\Order::with('user')->find($orderId);
+            if (! $order) {
+                return response()->json(['ok' => false, 'error' => 'Order not found', 'config' => $config], 404);
+            }
+            \Illuminate\Support\Facades\Mail::to($to)->send(new \App\Mail\OrderFulfilled($order));
+            return response()->json(['ok' => true, 'sent_to' => $to, 'type' => 'OrderFulfilled', 'order_id' => $order->id, 'config' => $config]);
+        }
+
         \Illuminate\Support\Facades\Mail::raw(
             'Lensmania Labs SMTP diagnostic — if you received this, email delivery works. Time: ' . now(),
             function ($m) use ($to) {
