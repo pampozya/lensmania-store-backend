@@ -35,4 +35,4 @@ RUN php artisan filament:assets || true
 
 EXPOSE 10000
 
-CMD php artisan migrate --force || true; php artisan db:seed --class=StorefrontPromoSeeder --force || true; apache2-foreground
+CMD php artisan migrate --force || true; php artisan db:seed --class=ProductSeeder --force || true; php artisan db:seed --class=StorefrontPromoSeeder --force || true; apache2-foreground
