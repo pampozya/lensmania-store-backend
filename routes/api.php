@@ -16,6 +16,41 @@ Route::middleware('guest')->get('/health', function () {
 
 Route::get('/promos', [PromoController::class, 'index']);
 
+// TEMP one-time repair: ensure bundle_items link the bundle to HushCut+BabelCut.
+// Reports the resulting state. Remove after running. Usage: /api/_fixbundle?key=lm-diag-2026
+Route::get('/_fixbundle', function (\Illuminate\Http\Request $request) {
+    if ($request->query('key') !== 'lm-diag-2026') {
+        return response()->json(['error' => 'forbidden'], 403);
+    }
+
+    $hushcut  = \App\Models\Product::firstOrCreate(['slug' => 'hushcut'], ['name' => 'HushCut', 'price_cents' => 3500, 'is_bundle' => false, 'active' => true]);
+    $babelcut = \App\Models\Product::firstOrCreate(['slug' => 'babelcut'], ['name' => 'BabelCut', 'price_cents' => 3500, 'is_bundle' => false, 'active' => true]);
+    $bundle   = \App\Models\Product::firstOrCreate(['slug' => 'bundle'], ['name' => 'Studio Pass', 'price_cents' => 5000, 'is_bundle' => true, 'active' => true]);
+
+    // Ensure bundle is flagged as a bundle (in case it was created without it)
+    if (! $bundle->is_bundle) {
+        $bundle->update(['is_bundle' => true]);
+    }
+
+    \App\Models\BundleItem::firstOrCreate(['bundle_product_id' => $bundle->id, 'item_product_id' => $hushcut->id]);
+    \App\Models\BundleItem::firstOrCreate(['bundle_product_id' => $bundle->id, 'item_product_id' => $babelcut->id]);
+
+    $items = \App\Models\BundleItem::where('bundle_product_id', $bundle->id)
+        ->with('itemProduct')
+        ->get()
+        ->map(fn ($i) => $i->itemProduct?->slug)
+        ->all();
+
+    return response()->json([
+        'ok' => true,
+        'bundle_id' => $bundle->id,
+        'bundle_is_bundle' => (bool) $bundle->is_bundle,
+        'hushcut_id' => $hushcut->id,
+        'babelcut_id' => $babelcut->id,
+        'bundle_items' => $items,
+    ]);
+});
+
 Route::post('/analytics/visit', [SiteVisitController::class, 'store'])
     ->middleware('throttle:120,1');
 
