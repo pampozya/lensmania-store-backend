@@ -34,6 +34,24 @@ final class StorefrontPromosResource extends Resource
 
     protected static ?string $slug = 'storefront-promos';
 
+    /**
+     * Check if this promo is 100% free (all prices are 0 or discount is 100).
+     * Free promos don't require PayPal links.
+     */
+    private static function isFullyFreePromo(callable $get): bool
+    {
+        $discountPercent = $get('discount_percent');
+        if ($discountPercent == 100) {
+            return true;
+        }
+
+        $hushcutPrice = (float) ($get('price_hushcut') ?? null);
+        $babelcutPrice = (float) ($get('price_babelcut') ?? null);
+        $bundlePrice = (float) ($get('price_bundle') ?? null);
+
+        return $hushcutPrice === 0.0 && $babelcutPrice === 0.0 && $bundlePrice === 0.0;
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -99,24 +117,36 @@ final class StorefrontPromosResource extends Resource
 
             Section::make('PayPal Links')
                 ->columns(1)
-                ->description('Required when the promo is Active — discounts are applied via these per-product PayPal links, so an active promo without them silently breaks checkout.')
+                ->description('Optional for 100% discounts (prices = 0). Required for other active promos — checkout needs these per-product PayPal links.')
                 ->schema([
                     TextInput::make('link_hushcut')
                         ->label('HushCut Link')
                         ->placeholder('https://www.paypal.com/ncp/payment/8Z3B74X38WYHY or just the ID')
-                        ->requiredIf('active', true)
+                        ->required(
+                            fn (callable $get) =>
+                                $get('active') === true &&
+                                !self::isFullyFreePromo($get)
+                        )
                         ->maxLength(500),
 
                     TextInput::make('link_babelcut')
                         ->label('BabelCut Link')
                         ->placeholder('https://www.paypal.com/ncp/payment/... or just the ID')
-                        ->requiredIf('active', true)
+                        ->required(
+                            fn (callable $get) =>
+                                $get('active') === true &&
+                                !self::isFullyFreePromo($get)
+                        )
                         ->maxLength(500),
 
                     TextInput::make('link_bundle')
                         ->label('Studio Pass Link')
                         ->placeholder('https://www.paypal.com/ncp/payment/... or just the ID')
-                        ->requiredIf('active', true)
+                        ->required(
+                            fn (callable $get) =>
+                                $get('active') === true &&
+                                !self::isFullyFreePromo($get)
+                        )
                         ->maxLength(500),
                 ]),
 
