@@ -59,6 +59,57 @@ Route::get('/_mailtest', function (\Illuminate\Http\Request $request) {
     }
 });
 
+// TEMP diagnostic: create a PAID order for an email + fulfill it + send the license email.
+// Simulates a full paid purchase. Remove after debugging.
+// Usage: /api/_paidtest?email=info@lensmania.ae&product=bundle&key=lm-diag-2026
+Route::get('/_paidtest', function (\Illuminate\Http\Request $request) {
+    if ($request->query('key') !== 'lm-diag-2026') {
+        return response()->json(['error' => 'forbidden'], 403);
+    }
+    $email = $request->query('email', 'info@lensmania.ae');
+    $slug  = $request->query('product', 'bundle');
+    if (! in_array($slug, ['hushcut', 'babelcut', 'bundle'], true)) {
+        return response()->json(['error' => 'bad product'], 422);
+    }
+
+    $user = \App\Models\User::where('email', $email)->first();
+    if (! $user) {
+        return response()->json(['error' => 'User not found: ' . $email], 404);
+    }
+
+    $product = \App\Models\Product::firstOrCreate(
+        ['slug' => $slug],
+        [
+            'name' => match ($slug) { 'hushcut' => 'HushCut', 'babelcut' => 'BabelCut', default => 'Studio Pass' },
+            'price_cents' => $slug === 'bundle' ? 5000 : 3500,
+            'is_bundle' => $slug === 'bundle',
+            'active' => true,
+        ]
+    );
+
+    $order = \App\Models\Order::create([
+        'user_id' => $user->id,
+        'product_id' => $product->id,
+        'product_slug' => $slug,
+        'amount_cents' => $product->price_cents,
+        'amount_usd' => number_format($product->price_cents / 100, 2, '.', ''),
+        'currency' => 'USD',
+        'status' => 'created',
+        'api_status' => 'pending',
+        'promo_code' => 'DUMMYPAID',
+        'paypal_payment_id' => 'TEST-' . uniqid(),
+        'selection_metadata' => ['product_version' => ['product' => $slug, 'platform' => 'mac', 'app' => 'premiere']],
+        'purchased_at' => now(),
+    ]);
+
+    try {
+        app(\App\Services\FulfillmentService::class)->fulfillStaticOrder($order);
+        return response()->json(['ok' => true, 'order_id' => $order->id, 'email' => $email, 'product' => $slug, 'note' => 'Paid order created, fulfilled, license email sent']);
+    } catch (\Throwable $e) {
+        return response()->json(['ok' => false, 'order_id' => $order->id, 'error' => $e->getMessage()], 500);
+    }
+});
+
 Route::post('/analytics/visit', [SiteVisitController::class, 'store'])
     ->middleware('throttle:120,1');
 
