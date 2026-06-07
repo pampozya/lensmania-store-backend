@@ -67,7 +67,7 @@ final class StorefrontPromosResource extends Resource
 
             Section::make('Discount')
                 ->columns(1)
-                ->description('Choose either a single discount percent OR set fixed prices for each product.')
+                ->description('Choose either a single discount percent OR set fixed prices for each product. Note: If any price is set to 0 (100% discount), PayPal links are optional — checkout will skip payment and go straight to order confirmation.')
                 ->schema([
                     TextInput::make('discount_percent')
                         ->label('Discount Percent')
