@@ -43,7 +43,7 @@ final class StorefrontPromosResource extends Resource
                     TextInput::make('code')
                         ->label('Code')
                         ->unique(ignorable: fn ($record) => $record)
-                        ->dehydrateStateUsing(fn (?string $state): ?string => $state ? strtoupper($state) : $state)
+                        ->dehydrateStateUsing(fn (?string $state): ?string => $state ? strtoupper((string) preg_replace('/\s+/', '', $state)) : $state)
                         ->extraInputAttributes(['style' => 'text-transform: uppercase'])
                         ->placeholder('e.g., YOUSSEFVIP')
                         ->helperText('Leave blank and save to auto-generate a unique code (format: LM-XXXXXXXX)')

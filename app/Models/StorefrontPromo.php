@@ -29,4 +29,9 @@ class StorefrontPromo extends Model
         'price_babelcut' => 'decimal:2',
         'price_bundle' => 'decimal:2',
     ];
+
+    public function setCodeAttribute(?string $value): void
+    {
+        $this->attributes['code'] = strtoupper((string) preg_replace('/\s+/', '', (string) $value));
+    }
 }
