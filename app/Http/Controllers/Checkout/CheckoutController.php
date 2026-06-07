@@ -73,11 +73,12 @@ class CheckoutController extends Controller
 
         // Auto-fulfill immediately for $0 orders (100% promo codes)
         // Wrapped in try/catch — fulfillment failure must never break the checkout response
+        $fulfillError = null;
         if ($amountCents === 0) {
             try {
                 $this->fulfillmentService->fulfillStaticOrder($order);
             } catch (\Throwable $e) {
-                // Silent — order is created, admin fulfills manually from Filament if needed
+                $fulfillError = $e->getMessage();
                 report($e);
             }
         }
@@ -87,6 +88,7 @@ class CheckoutController extends Controller
             'order_id' => $order->id,
             'status' => $order->derived_status,
             'selection_metadata' => $order->selection_metadata,
+            'fulfill_error' => $fulfillError, // null in production normally; visible for debugging
         ], 201);
     }
 
