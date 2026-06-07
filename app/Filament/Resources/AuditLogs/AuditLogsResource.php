@@ -13,13 +13,15 @@ final class AuditLogsResource extends Resource
 {
     protected static ?string $model = AuditLog::class;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $slug = 'audit-logs';
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
 
     protected static ?string $navigationLabel = 'Admin Action Log';
 
-    protected static ?string $navigationGroup = 'Operations';
+    protected static ?string $navigationGroup = 'System & Security';
 
     protected static ?string $pluralModelLabel = 'Admin Action Logs';
 

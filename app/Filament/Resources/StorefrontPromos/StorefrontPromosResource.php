@@ -24,7 +24,11 @@ final class StorefrontPromosResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-ticket';
 
-    protected static ?string $navigationLabel = 'Storefront Promos';
+    protected static ?string $navigationLabel = 'Promos & Affiliates';
+
+    protected static ?string $navigationGroup = 'Growth & Campaigns';
+
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $pluralModelLabel = 'Storefront Promos';
 

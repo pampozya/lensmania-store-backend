@@ -22,7 +22,9 @@ final class AffiliatesResource extends Resource
 
     protected static ?string $navigationLabel = 'Affiliates';
 
-    protected static ?string $navigationGroup = 'Growth';
+    protected static ?string $navigationGroup = 'Growth & Campaigns';
+
+    protected static ?int $navigationSort = 20;
 
     protected static ?string $pluralModelLabel = 'Affiliates';
 

@@ -9,9 +9,11 @@ final class VisitAnalytics extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
 
-    protected static ?string $navigationLabel = 'Visit Analytics';
+    protected static ?string $navigationLabel = 'Traffic Analytics';
 
     protected static ?string $navigationGroup = 'Analytics';
+
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $title = 'Visit Analytics';
 

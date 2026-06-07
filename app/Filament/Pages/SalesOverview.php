@@ -10,9 +10,11 @@ final class SalesOverview extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
 
-    protected static ?string $navigationLabel = 'Sales Overview';
+    protected static ?string $navigationLabel = 'Financials';
 
-    protected static ?string $navigationGroup = 'Revenue';
+    protected static ?string $navigationGroup = 'Analytics';
+
+    protected static ?int $navigationSort = 20;
 
     protected static ?string $title = 'Sales Overview';
 

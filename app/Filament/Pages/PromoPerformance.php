@@ -11,6 +11,10 @@ class PromoPerformance extends Page
 
     protected static ?string $navigationLabel = 'Promo Performance';
 
+    protected static ?string $navigationGroup = 'Growth & Campaigns';
+
+    protected static ?int $navigationSort = 40;
+
     protected static ?string $title = 'Promo Performance';
 
     protected static string $view = 'filament.pages.promo-performance';

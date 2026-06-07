@@ -10,9 +10,10 @@ use Filament\Pages\Page;
 final class SalesFunnel extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
-    protected static ?string $navigationLabel = 'Live Sales Funnel';
+    protected static ?string $navigationLabel = 'Sales Funnel';
     protected static ?string $navigationGroup = 'Analytics';
-    protected static ?string $title = 'Live Sales Funnel';
+    protected static ?int $navigationSort = 15;
+    protected static ?string $title = 'Sales Funnel';
     protected static string $view = 'filament.pages.analytics-report';
 
     public function getCards(): array

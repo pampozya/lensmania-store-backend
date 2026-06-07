@@ -13,6 +13,8 @@ final class EmailDeliveryLogsResource extends Resource
 {
     protected static ?string $model = EmailDeliveryLog::class;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $slug = 'email-delivery-logs';
 
     protected static ?string $navigationIcon = 'heroicon-o-envelope';

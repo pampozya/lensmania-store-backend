@@ -16,11 +16,13 @@ final class LicensesResource extends Resource
 {
     protected static ?string $model = License::class;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $navigationIcon = 'heroicon-o-key';
 
     protected static ?string $navigationLabel = 'Licenses';
 
-    protected static ?string $navigationGroup = 'Customers';
+    protected static ?string $navigationGroup = 'Operations';
 
     protected static ?string $pluralModelLabel = 'Licenses';
 

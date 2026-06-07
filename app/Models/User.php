@@ -52,6 +52,22 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(License::class);
     }
 
+    public function supportNotes()
+    {
+        return $this->hasMany(SupportNote::class);
+    }
+
+    public function emailDeliveryLogs()
+    {
+        return $this->hasMany(EmailDeliveryLog::class);
+    }
+
+    public function timelineAuditLogs()
+    {
+        return $this->hasMany(AuditLog::class, 'subject_id')
+            ->where('subject_type', self::class);
+    }
+
     public function setPasswordAttribute(string $value): void
     {
         $this->attributes['password'] = $value ? Hash::make($value) : $value;

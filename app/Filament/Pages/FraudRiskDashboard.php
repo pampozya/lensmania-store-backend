@@ -12,9 +12,10 @@ use Filament\Pages\Page;
 final class FraudRiskDashboard extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-shield-exclamation';
-    protected static ?string $navigationLabel = 'Fraud / Risk Dashboard';
-    protected static ?string $navigationGroup = 'Operations';
-    protected static ?string $title = 'Fraud / Risk Dashboard';
+    protected static ?string $navigationLabel = 'Risk Monitor';
+    protected static ?string $navigationGroup = 'System & Security';
+    protected static ?int $navigationSort = 30;
+    protected static ?string $title = 'Risk Monitor';
     protected static string $view = 'filament.pages.analytics-report';
 
     public function getCards(): array

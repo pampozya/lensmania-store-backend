@@ -29,6 +29,10 @@ final class OrdersResource extends Resource
 
     protected static ?string $navigationLabel = 'Orders';
 
+    protected static ?string $navigationGroup = 'Operations';
+
+    protected static ?int $navigationSort = 10;
+
     protected static ?string $pluralModelLabel = 'Orders';
 
     public static function form($form): \Filament\Forms\Form

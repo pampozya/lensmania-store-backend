@@ -15,6 +15,8 @@ final class SupportTools extends Page
 
     protected static ?string $navigationGroup = 'Operations';
 
+    protected static ?int $navigationSort = 40;
+
     protected static ?string $title = 'Support Tools';
 
     protected static string $view = 'filament.pages.support-tools';

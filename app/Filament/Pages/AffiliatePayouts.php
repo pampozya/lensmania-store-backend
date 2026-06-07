@@ -11,7 +11,9 @@ final class AffiliatePayouts extends Page
 
     protected static ?string $navigationLabel = 'Affiliate Payouts';
 
-    protected static ?string $navigationGroup = 'Growth';
+    protected static ?string $navigationGroup = 'Growth & Campaigns';
+
+    protected static ?int $navigationSort = 30;
 
     protected static ?string $title = 'Affiliate Payouts';
 

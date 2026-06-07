@@ -21,6 +21,8 @@ final class SiteVisitsResource extends Resource
 {
     protected static ?string $model = SiteVisit::class;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $slug = 'site-visits';
 
     protected static ?string $navigationIcon = 'heroicon-o-cursor-arrow-ripple';

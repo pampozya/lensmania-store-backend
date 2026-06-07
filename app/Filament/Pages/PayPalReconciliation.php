@@ -11,7 +11,9 @@ final class PayPalReconciliation extends Page
 
     protected static ?string $navigationLabel = 'PayPal Reconciliation';
 
-    protected static ?string $navigationGroup = 'Revenue';
+    protected static ?string $navigationGroup = 'System & Security';
+
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $title = 'PayPal Reconciliation';
 

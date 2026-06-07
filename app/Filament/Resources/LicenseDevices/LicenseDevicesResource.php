@@ -13,13 +13,15 @@ final class LicenseDevicesResource extends Resource
 {
     protected static ?string $model = LicenseDevice::class;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $slug = 'license-devices';
 
     protected static ?string $navigationIcon = 'heroicon-o-device-phone-mobile';
 
     protected static ?string $navigationLabel = 'License Devices';
 
-    protected static ?string $navigationGroup = 'Customers';
+    protected static ?string $navigationGroup = 'Operations';
 
     protected static ?string $pluralModelLabel = 'License Devices';
 

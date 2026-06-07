@@ -8,9 +8,10 @@ use Filament\Pages\Page;
 final class DownloadHealth extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-arrow-down-tray';
-    protected static ?string $navigationLabel = 'Download Health';
-    protected static ?string $navigationGroup = 'Operations';
-    protected static ?string $title = 'Download Health';
+    protected static ?string $navigationLabel = 'Delivery & Logs';
+    protected static ?string $navigationGroup = 'System & Security';
+    protected static ?int $navigationSort = 20;
+    protected static ?string $title = 'Delivery & Logs';
     protected static string $view = 'filament.pages.analytics-report';
 
     public function getCards(): array

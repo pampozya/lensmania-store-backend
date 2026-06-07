@@ -3,20 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\AffiliatePayouts;
-use App\Filament\Pages\AffiliateScorecard;
-use App\Filament\Pages\AbandonedCheckout;
-use App\Filament\Pages\CohortAnalytics;
-use App\Filament\Pages\CustomerTimeline;
-use App\Filament\Pages\DeviceActivationMonitor;
 use App\Filament\Pages\DownloadHealth;
-use App\Filament\Pages\EmailDeliveryMonitor;
 use App\Filament\Pages\FraudRiskDashboard;
-use App\Filament\Pages\GeoHeatmap;
 use App\Filament\Pages\PayPalReconciliation;
-use App\Filament\Pages\PayPalCsvImporter;
-use App\Filament\Pages\ProductVersionAnalytics;
-use App\Filament\Pages\PromoLeaderboard;
-use App\Filament\Pages\RevenueForecast;
 use App\Filament\Pages\SalesOverview;
 use App\Filament\Pages\SalesFunnel;
 use App\Filament\Pages\SupportTools;
@@ -38,13 +27,12 @@ use App\Filament\Widgets\ProductRevenueChart;
 use App\Filament\Widgets\PromoAnalyticsOverview;
 use App\Filament\Widgets\RevenueTrendChart;
 use App\Filament\Widgets\StoreStatsOverview;
-use App\Filament\Widgets\VisitAnalyticsOverview;
-use App\Filament\Widgets\VisitDeviceChart;
-use App\Filament\Widgets\VisitLocationChart;
+use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -66,8 +54,44 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->font('Space Grotesk')
+            ->defaultThemeMode(ThemeMode::Dark)
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => [
+                    50 => '#fff8db',
+                    100 => '#ffeeb0',
+                    200 => '#ffe080',
+                    300 => '#ffd04f',
+                    400 => '#e9bd36',
+                    500 => '#d4af37',
+                    600 => '#ae8525',
+                    700 => '#87631c',
+                    800 => '#624716',
+                    900 => '#3a2a0d',
+                    950 => '#1d1405',
+                ],
+                'danger' => Color::Red,
+                'success' => Color::Green,
+                'gray' => [
+                    50 => '#f6f6f7',
+                    100 => '#e7e7ea',
+                    200 => '#cfcfd5',
+                    300 => '#a8a8b3',
+                    400 => '#777784',
+                    500 => '#5d5d68',
+                    600 => '#46464f',
+                    700 => '#303039',
+                    800 => '#191920',
+                    900 => '#0b0b10',
+                    950 => '#050505',
+                ],
+            ])
+            ->navigationGroups([
+                NavigationGroup::make('Dashboard'),
+                NavigationGroup::make('Operations'),
+                NavigationGroup::make('Growth & Campaigns'),
+                NavigationGroup::make('Analytics'),
+                NavigationGroup::make('System & Security'),
             ])
             ->resources([
                 OrdersResource::class,
@@ -85,38 +109,23 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,
                 SalesOverview::class,
-                RevenueForecast::class,
                 PayPalReconciliation::class,
-                PayPalCsvImporter::class,
                 AffiliatePayouts::class,
-                AffiliateScorecard::class,
                 VisitAnalytics::class,
                 SalesFunnel::class,
-                PromoLeaderboard::class,
-                AbandonedCheckout::class,
-                GeoHeatmap::class,
-                ProductVersionAnalytics::class,
-                CohortAnalytics::class,
-                CustomerTimeline::class,
-                DeviceActivationMonitor::class,
                 DownloadHealth::class,
                 FraudRiskDashboard::class,
-                EmailDeliveryMonitor::class,
                 SupportTools::class,
                 SystemHealth::class,
                 \App\Filament\Pages\PromoPerformance::class,
             ])
             ->widgets([
                 StoreStatsOverview::class,
-                VisitAnalyticsOverview::class,
                 RevenueTrendChart::class,
                 ProductRevenueChart::class,
                 PromoAnalyticsOverview::class,
                 OperationalRiskOverview::class,
-                VisitLocationChart::class,
-                VisitDeviceChart::class,
                 Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

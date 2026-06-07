@@ -23,9 +23,11 @@ final class SupportNotesResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-right';
 
-    protected static ?string $navigationLabel = 'Support Inbox Lite';
+    protected static ?string $navigationLabel = 'Support Inbox';
 
     protected static ?string $navigationGroup = 'Operations';
+
+    protected static ?int $navigationSort = 30;
 
     protected static ?string $pluralModelLabel = 'Support Notes';
 
