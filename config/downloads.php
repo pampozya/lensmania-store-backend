@@ -4,32 +4,29 @@ return [
     'products' => [
         'hushcut' => [
             'name' => 'HushCut',
-            'version' => '1.1.14',
-            'url' => 'https://drive.google.com/uc?export=download&id=15DeJQ9yKsdJDdtAIUTTxsFewAxgf8ClU',
+            'version' => '1.1.15',
+            'url' => 'https://drive.google.com/uc?export=download&id=1BmzujnAqQEvMdI_S_sfOKIFlE6upzmEC',
             'variants' => [
                 'mac' => [
-                    'premiere' => 'https://drive.google.com/uc?export=download&id=15DeJQ9yKsdJDdtAIUTTxsFewAxgf8ClU',
-                    'resolve' => 'https://drive.google.com/uc?export=download&id=1U9MSH6iam5EtQT8CvrMe9DwqPLeklGjy',
-                ],
-                'windows' => [
-                    'premiere' => 'https://drive.google.com/uc?export=download&id=16i5W1ImSJVHNXA5IfqjEdjgEVpSoJj9W',
+                    'premiere' => 'https://drive.google.com/uc?export=download&id=1BmzujnAqQEvMdI_S_sfOKIFlE6upzmEC',
+                    'resolve' => 'https://drive.google.com/uc?export=download&id=1RlWulenPnco7aJ-lCz0_qHwWJ4bkdA44',
                 ],
             ],
         ],
         'babelcut' => [
             'name' => 'BabelCut',
-            'version' => '1.1.2',
-            'url' => 'https://drive.google.com/uc?export=download&id=1dSJ-ysINEZBn3QztNkdwgQSRS77-Enbd',
+            'version' => '1.1.3',
+            'url' => 'https://drive.google.com/uc?export=download&id=1Je8x19p-yHetsqVOu2kY8vVmuoCKvE1Y',
             'variants' => [
                 'mac' => [
-                    'premiere' => 'https://drive.google.com/uc?export=download&id=1dSJ-ysINEZBn3QztNkdwgQSRS77-Enbd',
+                    'premiere' => 'https://drive.google.com/uc?export=download&id=1Je8x19p-yHetsqVOu2kY8vVmuoCKvE1Y',
                 ],
             ],
         ],
         'bundle' => [
             'name' => 'Studio Pass (HushCut + BabelCut)',
-            'version' => '1.1.14 + 1.1.2',
-            'url' => 'https://labs.lensmania.ae/dashboard.html',
+            'version' => '1.1.15 + 1.1.3',
+            'url' => 'https://labs.lensmania.ae/dashboard',
             'includes' => ['hushcut', 'babelcut'],
         ],
     ],
