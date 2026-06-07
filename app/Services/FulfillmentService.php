@@ -154,13 +154,21 @@ class FulfillmentService
                 'product_count' => count($productIds),
             ]);
 
-            // Send fulfillment email outside the transaction lock
+        });
+
+        // Send fulfillment email after transaction commits — never block the response
+        try {
             $freshOrder = Order::with('user')->find($order->id);
             if ($freshOrder?->user?->email) {
                 Mail::to($freshOrder->user->email)
                     ->send(new OrderFulfilled($freshOrder));
             }
-        });
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('fulfillment_email_failed', [
+                'order_id' => $order->id,
+                'error'    => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -209,11 +217,18 @@ class FulfillmentService
             ]);
         });
 
-        // Send email after transaction commits
-        $freshOrder = Order::with('user')->find($order->id);
-        if ($freshOrder?->user?->email) {
-            Mail::to($freshOrder->user->email)
-                ->queue(new OrderFulfilled($freshOrder));
+        // Send email after transaction commits — never block the response
+        try {
+            $freshOrder = Order::with('user')->find($order->id);
+            if ($freshOrder?->user?->email) {
+                Mail::to($freshOrder->user->email)
+                    ->send(new OrderFulfilled($freshOrder));
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('static_fulfillment_email_failed', [
+                'order_id' => $order->id,
+                'error'    => $e->getMessage(),
+            ]);
         }
 
         return true;
