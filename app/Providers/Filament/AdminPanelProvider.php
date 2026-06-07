@@ -32,6 +32,7 @@ use App\Filament\Resources\Licenses\LicensesResource;
 use App\Filament\Resources\SupportNotes\SupportNotesResource;
 use App\Filament\Resources\Users\UsersResource;
 use App\Filament\Resources\StorefrontPromos\StorefrontPromosResource;
+use App\Filament\Resources\SiteVisits\SiteVisitsResource;
 use App\Filament\Widgets\OperationalRiskOverview;
 use App\Filament\Widgets\ProductRevenueChart;
 use App\Filament\Widgets\PromoAnalyticsOverview;
@@ -79,6 +80,7 @@ class AdminPanelProvider extends PanelProvider
                 AuditLogsResource::class,
                 EmailDeliveryLogsResource::class,
                 StorefrontPromosResource::class,
+                SiteVisitsResource::class,
             ])
             ->pages([
                 Pages\Dashboard::class,

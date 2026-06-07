@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Configuration\Exceptions;
 use App\Http\Middleware\AuthenticateApiToken;
+use App\Http\Middleware\ForceJsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\AuthenticationException;
@@ -21,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->appendToGroup('web', [
             \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
+
+        $middleware->prependToGroup('api', [
+            ForceJsonResponse::class,
         ]);
 
         $middleware->appendToGroup('api', [
