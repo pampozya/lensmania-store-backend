@@ -7,12 +7,14 @@ use App\Filament\Resources\Orders\Pages\EditOrder;
 use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Models\Order;
 use App\Models\Product;
+use App\Services\FulfillmentService;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
@@ -182,12 +184,29 @@ final class OrdersResource extends Resource
                     }),
             ])
             ->actions([
-                Action::make('mark_fulfilled')
-                    ->label('Mark fulfilled')
+                Action::make('fulfill')
+                    ->label('Fulfill')
+                    ->icon('heroicon-o-check-badge')
                     ->color('success')
                     ->requiresConfirmation()
+                    ->modalHeading('Fulfill this order?')
+                    ->modalDescription('This will create license keys and send the customer their fulfillment email.')
+                    ->visible(fn (Order $record): bool => ! in_array($record->api_status, ['fulfilled'], true))
                     ->action(function (Order $record): void {
-                        $record->forceFill(['api_status' => 'fulfilled', 'status' => 'paid'])->save();
+                        try {
+                            app(FulfillmentService::class)->fulfillStaticOrder($record);
+                            Notification::make()
+                                ->title('Order fulfilled')
+                                ->body('License keys created and email sent to ' . $record->user?->email)
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Fulfillment failed')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
                     }),
             ])
             ->bulkActions([]);

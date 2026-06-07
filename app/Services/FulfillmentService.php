@@ -158,7 +158,7 @@ class FulfillmentService
             $freshOrder = Order::with('user')->find($order->id);
             if ($freshOrder?->user?->email) {
                 Mail::to($freshOrder->user->email)
-                    ->queue(new OrderFulfilled($freshOrder));
+                    ->send(new OrderFulfilled($freshOrder));
             }
         });
     }

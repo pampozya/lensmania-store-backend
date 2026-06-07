@@ -92,6 +92,11 @@ class CheckoutController extends Controller
      * Called by the React thank-you page after returning from PayPal.
      * Fulfills the most recent pending static order for the logged-in user.
      */
+    /**
+     * Called by the React thank-you page after returning from PayPal.
+     * Only auto-fulfills $0 orders (100% promo — no payment needed).
+     * Paid orders require PayPal IPN confirmation and are fulfilled manually from Filament.
+     */
     public function fulfillPending(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -101,11 +106,13 @@ class CheckoutController extends Controller
 
         $order = Order::where('user_id', $user->id)
             ->where('api_status', 'pending')
+            ->where('amount_cents', 0)
             ->latest('created_at')
             ->first();
 
         if (! $order) {
-            return response()->json(['ok' => true, 'message' => 'No pending orders']);
+            // Paid orders: tell the frontend to wait — admin will fulfill after PayPal confirms
+            return response()->json(['ok' => true, 'fulfilled' => false, 'message' => 'Pending payment confirmation']);
         }
 
         try {

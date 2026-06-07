@@ -38,7 +38,7 @@ services:
       - key: FILESYSTEM_DISK
         value: local
       - key: QUEUE_CONNECTION
-        value: database
+        value: sync
       - key: SESSION_DRIVER
         value: file
       - key: SESSION_LIFETIME
