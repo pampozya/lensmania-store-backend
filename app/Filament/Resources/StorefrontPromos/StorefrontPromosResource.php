@@ -117,36 +117,21 @@ final class StorefrontPromosResource extends Resource
 
             Section::make('PayPal Links')
                 ->columns(1)
-                ->description('Optional for 100% discounts (prices = 0). Required for other active promos — checkout needs these per-product PayPal links.')
+                ->description('Per-product PayPal checkout links. Leave empty for 100% (free) promos — checkout skips payment. Required for paid promos or checkout will fall back to the default product price.')
                 ->schema([
                     TextInput::make('link_hushcut')
                         ->label('HushCut Link')
                         ->placeholder('https://www.paypal.com/ncp/payment/8Z3B74X38WYHY or just the ID')
-                        ->required(
-                            fn (callable $get) =>
-                                $get('active') === true &&
-                                !self::isFullyFreePromo($get)
-                        )
                         ->maxLength(500),
 
                     TextInput::make('link_babelcut')
                         ->label('BabelCut Link')
                         ->placeholder('https://www.paypal.com/ncp/payment/... or just the ID')
-                        ->required(
-                            fn (callable $get) =>
-                                $get('active') === true &&
-                                !self::isFullyFreePromo($get)
-                        )
                         ->maxLength(500),
 
                     TextInput::make('link_bundle')
                         ->label('Studio Pass Link')
                         ->placeholder('https://www.paypal.com/ncp/payment/... or just the ID')
-                        ->required(
-                            fn (callable $get) =>
-                                $get('active') === true &&
-                                !self::isFullyFreePromo($get)
-                        )
                         ->maxLength(500),
                 ]),
 
@@ -213,14 +198,22 @@ final class StorefrontPromosResource extends Resource
                     ->icon(fn (StorefrontPromo $record) => $record->active ? 'heroicon-o-no-symbol' : 'heroicon-o-check-circle')
                     ->color(fn (StorefrontPromo $record) => $record->active ? 'warning' : 'success')
                     ->action(function (StorefrontPromo $record): void {
-                        // Block activating a promo that is missing any PayPal link —
-                        // discounts route through these links, so an active promo
-                        // without them silently breaks checkout.
+                        // 100% (free) promos skip PayPal entirely, so they don't need links.
+                        // Only block activation for PAID promos that are missing links.
+                        $isFree = $record->discount_percent == 100
+                            || ((float) $record->price_hushcut === 0.0
+                                && (float) $record->price_babelcut === 0.0
+                                && (float) $record->price_bundle === 0.0
+                                && ($record->price_hushcut !== null
+                                    || $record->price_babelcut !== null
+                                    || $record->price_bundle !== null));
+
                         if (! $record->active
+                            && ! $isFree
                             && ! ($record->link_hushcut && $record->link_babelcut && $record->link_bundle)) {
                             Notification::make()
                                 ->title('Cannot activate')
-                                ->body('Add all 3 PayPal links before activating this promo.')
+                                ->body('Add all 3 PayPal links before activating this paid promo (or set it to 100% off / $0).')
                                 ->danger()
                                 ->send();
 
