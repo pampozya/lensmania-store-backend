@@ -174,9 +174,10 @@ class FulfillmentService
      */
     public function fulfillStaticOrder(Order $order): bool
     {
-        if (in_array($order->api_status, ['fulfilled', 'paid'], true)) {
-            return false; // Already done
-        }
+        // NOTE: do NOT early-return for already-paid/fulfilled orders.
+        // License/entitlement creation below is idempotent (firstOrCreate + exists check),
+        // so re-running safely creates any licenses that are still missing — which is
+        // exactly the repair needed when an earlier fulfillment partially failed.
 
         try {
         DB::transaction(function () use ($order) {

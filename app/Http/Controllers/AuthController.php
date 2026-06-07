@@ -175,6 +175,36 @@ class AuthController extends Controller
         return response()->json($rows, 200);
     }
 
+    /**
+     * Resend the license + download email for an order the authenticated user owns.
+     * Also (idempotently) ensures licenses exist, so it doubles as a self-service repair.
+     */
+    public function resendEmail(Request $request, int $order): JsonResponse
+    {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $orderModel = Order::where('id', $order)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (! $orderModel) {
+            return response()->json(['error' => 'Order not found'], 404);
+        }
+
+        try {
+            // Ensure licenses exist (idempotent) then send the email.
+            app(\App\Services\FulfillmentService::class)->fulfillStaticOrder($orderModel);
+            return response()->json(['ok' => true, 'message' => 'Email sent to ' . $user->email]);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json(['ok' => false, 'error' => 'Could not send email'], 500);
+        }
+    }
+
     private function formatOrder(Order $order, \Illuminate\Support\Collection $licenses): array
     {
         // For bundles, expand into one card per license

@@ -36,6 +36,7 @@ Route::middleware('api.jwt')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::get('/auth/orders', [AuthController::class, 'orders']);
+    Route::post('/auth/orders/{order}/resend-email', [AuthController::class, 'resendEmail'])->middleware('throttle:5,1');
     Route::post('/checkout/static-intent', [CheckoutController::class, 'staticIntent'])->middleware('throttle:60,1');
 });
 
