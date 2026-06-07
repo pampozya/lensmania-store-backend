@@ -27,6 +27,7 @@ final class AffiliatePayouts extends Page
                 $purchaseEvents = $affiliate->events()->where('type', 'purchase');
                 $revenueCents = (int) $purchaseEvents->sum('revenue_cents');
                 $minPayoutCents = (int) $affiliate->min_payout_cents;
+                $commissionCents = $affiliate->commissionOwedCents($revenueCents);
 
                 return [
                     'code' => $affiliate->code,
@@ -37,8 +38,10 @@ final class AffiliatePayouts extends Page
                     'clicks' => $affiliate->events()->where('type', 'checkout_click')->count(),
                     'purchases' => $purchaseEvents->count(),
                     'revenue' => $revenueCents / 100,
+                    'commission_rate' => ((int) $affiliate->commission_bps) / 100,
+                    'commission_owed' => $commissionCents / 100,
                     'threshold' => $minPayoutCents / 100,
-                    'ready' => $revenueCents >= $minPayoutCents && $revenueCents > 0,
+                    'ready' => $commissionCents >= $minPayoutCents && $commissionCents > 0,
                 ];
             })
             ->all();

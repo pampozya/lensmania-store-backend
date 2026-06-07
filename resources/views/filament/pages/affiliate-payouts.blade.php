@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
         <p class="text-sm text-gray-500 dark:text-gray-400">
-            Payout readiness uses tracked purchase revenue and each affiliate's minimum payout threshold. A commission-rate field is not in the current database yet, so this page does not invent owed commission.
+            Commission owed = tracked purchase revenue × each affiliate's commission rate. "Ready" means owed commission meets the minimum payout threshold. Set the rate per affiliate in the Affiliates resource.
         </p>
 
         <div class="mt-4 overflow-x-auto">
@@ -15,6 +15,8 @@
                         <th class="py-2 text-right">Clicks</th>
                         <th class="py-2 text-right">Purchases</th>
                         <th class="py-2 text-right">Revenue</th>
+                        <th class="py-2 text-right">Rate</th>
+                        <th class="py-2 text-right">Owed</th>
                         <th class="py-2 text-right">Threshold</th>
                         <th class="py-2">Status</th>
                     </tr>
@@ -29,6 +31,8 @@
                             <td class="py-2 text-right text-gray-700 dark:text-gray-300">{{ $row['clicks'] }}</td>
                             <td class="py-2 text-right text-gray-700 dark:text-gray-300">{{ $row['purchases'] }}</td>
                             <td class="py-2 text-right text-gray-950 dark:text-white">${{ number_format($row['revenue'], 2) }}</td>
+                            <td class="py-2 text-right text-gray-700 dark:text-gray-300">{{ number_format($row['commission_rate'], 1) }}%</td>
+                            <td class="py-2 text-right font-medium text-gray-950 dark:text-white">${{ number_format($row['commission_owed'], 2) }}</td>
                             <td class="py-2 text-right text-gray-700 dark:text-gray-300">${{ number_format($row['threshold'], 2) }}</td>
                             <td class="py-2">
                                 @if ($row['ready'])
@@ -39,7 +43,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="9" class="py-4 text-center text-gray-500">No affiliates yet.</td></tr>
+                        <tr><td colspan="11" class="py-4 text-center text-gray-500">No affiliates yet.</td></tr>
                     @endforelse
                 </tbody>
             </table>

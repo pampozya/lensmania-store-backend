@@ -95,20 +95,24 @@ final class StorefrontPromosResource extends Resource
 
             Section::make('PayPal Links')
                 ->columns(1)
+                ->description('Required when the promo is Active — discounts are applied via these per-product PayPal links, so an active promo without them silently breaks checkout.')
                 ->schema([
                     TextInput::make('link_hushcut')
                         ->label('HushCut Link')
                         ->placeholder('https://www.paypal.com/ncp/payment/8Z3B74X38WYHY or just the ID')
+                        ->requiredIf('active', true)
                         ->maxLength(500),
 
                     TextInput::make('link_babelcut')
                         ->label('BabelCut Link')
                         ->placeholder('https://www.paypal.com/ncp/payment/... or just the ID')
+                        ->requiredIf('active', true)
                         ->maxLength(500),
 
                     TextInput::make('link_bundle')
                         ->label('Studio Pass Link')
                         ->placeholder('https://www.paypal.com/ncp/payment/... or just the ID')
+                        ->requiredIf('active', true)
                         ->maxLength(500),
                 ]),
 
@@ -152,6 +156,12 @@ final class StorefrontPromosResource extends Resource
                     ->label('Active')
                     ->sortable(),
 
+                TextColumn::make('links_status')
+                    ->label('PayPal Links')
+                    ->state(fn (StorefrontPromo $record): string => ($record->link_hushcut && $record->link_babelcut && $record->link_bundle) ? 'Complete' : 'Missing')
+                    ->badge()
+                    ->color(fn (string $state): string => $state === 'Complete' ? 'success' : 'danger'),
+
                 TextColumn::make('expires_at')
                     ->label('Expires')
                     ->dateTime('M j, Y')
@@ -169,6 +179,20 @@ final class StorefrontPromosResource extends Resource
                     ->icon(fn (StorefrontPromo $record) => $record->active ? 'heroicon-o-no-symbol' : 'heroicon-o-check-circle')
                     ->color(fn (StorefrontPromo $record) => $record->active ? 'warning' : 'success')
                     ->action(function (StorefrontPromo $record): void {
+                        // Block activating a promo that is missing any PayPal link —
+                        // discounts route through these links, so an active promo
+                        // without them silently breaks checkout.
+                        if (! $record->active
+                            && ! ($record->link_hushcut && $record->link_babelcut && $record->link_bundle)) {
+                            Notification::make()
+                                ->title('Cannot activate')
+                                ->body('Add all 3 PayPal links before activating this promo.')
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+
                         $record->update(['active' => !$record->active]);
                         Notification::make()
                             ->title($record->active ? 'Promo activated' : 'Promo deactivated')
