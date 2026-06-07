@@ -181,6 +181,7 @@ class FulfillmentService
             return false; // Already done
         }
 
+        try {
         DB::transaction(function () use ($order) {
             $order->forceFill([
                 'status'     => 'paid',
@@ -216,6 +217,10 @@ class FulfillmentService
                 'product_count' => count($productIds),
             ]);
         });
+        } catch (\Throwable $e) {
+            report($e);
+            return false;
+        }
 
         // Send email after transaction commits — never block the response
         try {
