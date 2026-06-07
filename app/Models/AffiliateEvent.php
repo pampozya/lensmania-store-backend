@@ -11,5 +11,14 @@ class AffiliateEvent extends Model
     protected $casts = [
         'revenue_cents' => 'integer',
     ];
-}
 
+    public function affiliate()
+    {
+        return $this->belongsTo(Affiliate::class);
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+}

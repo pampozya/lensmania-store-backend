@@ -2,10 +2,26 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\AffiliatePayouts;
+use App\Filament\Pages\PayPalReconciliation;
+use App\Filament\Pages\SalesOverview;
+use App\Filament\Pages\SupportTools;
+use App\Filament\Pages\SystemHealth;
+use App\Filament\Pages\VisitAnalytics;
+use App\Filament\Resources\Affiliates\AffiliatesResource;
+use App\Filament\Resources\DownloadTokens\DownloadTokensResource;
 use App\Filament\Resources\Orders\OrdersResource;
 use App\Filament\Resources\Licenses\LicensesResource;
 use App\Filament\Resources\Users\UsersResource;
 use App\Filament\Resources\StorefrontPromos\StorefrontPromosResource;
+use App\Filament\Widgets\OperationalRiskOverview;
+use App\Filament\Widgets\ProductRevenueChart;
+use App\Filament\Widgets\PromoAnalyticsOverview;
+use App\Filament\Widgets\RevenueTrendChart;
+use App\Filament\Widgets\StoreStatsOverview;
+use App\Filament\Widgets\VisitAnalyticsOverview;
+use App\Filament\Widgets\VisitDeviceChart;
+use App\Filament\Widgets\VisitLocationChart;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -38,14 +54,29 @@ class AdminPanelProvider extends PanelProvider
                 OrdersResource::class,
                 UsersResource::class,
                 LicensesResource::class,
+                AffiliatesResource::class,
+                DownloadTokensResource::class,
                 StorefrontPromosResource::class,
             ])
             ->pages([
                 Pages\Dashboard::class,
+                SalesOverview::class,
+                PayPalReconciliation::class,
+                AffiliatePayouts::class,
+                VisitAnalytics::class,
+                SupportTools::class,
+                SystemHealth::class,
                 \App\Filament\Pages\PromoPerformance::class,
             ])
             ->widgets([
-                \App\Filament\Widgets\StoreStatsOverview::class,
+                StoreStatsOverview::class,
+                VisitAnalyticsOverview::class,
+                RevenueTrendChart::class,
+                ProductRevenueChart::class,
+                PromoAnalyticsOverview::class,
+                OperationalRiskOverview::class,
+                VisitLocationChart::class,
+                VisitDeviceChart::class,
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
             ])

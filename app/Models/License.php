@@ -21,4 +21,9 @@ class License extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function devices()
+    {
+        return $this->hasMany(LicenseDevice::class);
+    }
 }

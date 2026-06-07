@@ -18,4 +18,14 @@ class DownloadToken extends Model
         'expires_at' => 'datetime',
         'used_at' => 'datetime',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function build()
+    {
+        return $this->belongsTo(Build::class);
+    }
 }

@@ -21,4 +21,9 @@ class LicenseDevice extends Model
         'first_activated_at' => 'datetime',
         'last_validated_at' => 'datetime',
     ];
+
+    public function license()
+    {
+        return $this->belongsTo(License::class);
+    }
 }

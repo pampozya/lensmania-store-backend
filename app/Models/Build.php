@@ -21,4 +21,14 @@ class Build extends Model
         'is_latest' => 'boolean',
         'file_size' => 'integer',
     ];
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function uploader()
+    {
+        return $this->belongsTo(User::class, 'uploaded_by');
+    }
 }

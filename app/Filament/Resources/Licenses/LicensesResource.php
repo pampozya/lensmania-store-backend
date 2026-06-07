@@ -9,6 +9,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 final class LicensesResource extends Resource
@@ -18,6 +19,8 @@ final class LicensesResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-key';
 
     protected static ?string $navigationLabel = 'Licenses';
+
+    protected static ?string $navigationGroup = 'Customers';
 
     protected static ?string $pluralModelLabel = 'Licenses';
 
@@ -44,12 +47,23 @@ final class LicensesResource extends Resource
                         'inactive' => 'gray',
                         default => 'gray',
                     }),
+                TextColumn::make('devices_count')
+                    ->label('Devices')
+                    ->counts('devices')
+                    ->sortable(),
                 TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime('M j, Y')
                     ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
+            ->filters([
+                SelectFilter::make('status')
+                    ->options([
+                        'active' => 'Active',
+                        'revoked' => 'Revoked',
+                    ]),
+            ])
             ->actions([
                 Action::make('revoke')
                     ->label('Revoke')
