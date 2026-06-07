@@ -188,12 +188,13 @@ class AuthController extends Controller
 
             $licenseCards = $items->map(function ($item) use ($licenses, $order) {
                 $license = $licenses->get($item->item_product_id);
+                $slug = $item->itemProduct?->slug ?? 'unknown';
                 return [
-                    'product_slug' => $item->itemProduct?->slug ?? 'unknown',
+                    'product_slug' => $slug,
                     'product_name' => $item->itemProduct?->name ?? 'Unknown',
                     'license_key' => $license?->license_key,
                     'license_status' => $license?->status ?? 'pending',
-                    'download_url' => null,
+                    'download_url' => $license ? $this->resolveDownloadUrl($slug, $order) : null,
                 ];
             })->values()->all();
         } else {
@@ -203,7 +204,7 @@ class AuthController extends Controller
                 'product_name' => $order->product_name,
                 'license_key' => $license?->license_key,
                 'license_status' => $license?->status ?? 'pending',
-                'download_url' => null,
+                'download_url' => $license ? $this->resolveDownloadUrl($order->product_slug, $order) : null,
             ]];
         }
 
@@ -219,5 +220,32 @@ class AuthController extends Controller
             'selection_metadata' => $order->selection_metadata,
             'purchased_at' => optional($order->purchased_at)->toIso8601String(),
         ];
+    }
+
+    /**
+     * Resolve the installer download URL for a product, honouring the platform/app
+     * the customer chose at checkout (stored in the order's selection_metadata).
+     * Falls back to the product's default URL when no specific variant matches.
+     */
+    private function resolveDownloadUrl(string $slug, Order $order): ?string
+    {
+        $config = config("downloads.products.{$slug}");
+        if (! $config) {
+            return null;
+        }
+
+        // Figure out the selected platform + app for this product from the order metadata.
+        $meta = $order->selection_metadata ?? [];
+        $sel = $meta[$slug] // bundle: per-product selection (e.g. metadata['hushcut'])
+            ?? $meta['product_version'] // single-product order
+            ?? $meta; // flat selection
+
+        $platform = $sel['platform'] ?? 'mac';
+        $app = $sel['app'] ?? 'premiere';
+
+        // Prefer the exact variant; fall back to the product default URL.
+        return $config['variants'][$platform][$app]
+            ?? $config['url']
+            ?? null;
     }
 }
