@@ -11,6 +11,23 @@ class StorefrontPromoSeeder extends Seeder
     {
         StorefrontPromo::upsert([
             [
+                // 100% test code — free checkout, no PayPal links needed.
+                'code' => 'TEST100',
+                'label' => 'Test 100% Discount',
+                'affiliate' => 'test',
+                'discount_percent' => 100,
+                'price_hushcut' => null,
+                'price_babelcut' => null,
+                'price_bundle' => null,
+                'link_hushcut' => null,
+                'link_babelcut' => null,
+                'link_bundle' => null,
+                'active' => true,
+                'expires_at' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
                 'code' => 'YOUSSEF10',
                 'label' => "Youssef's followers",
                 'affiliate' => 'youssef',
