@@ -28,14 +28,16 @@ class OrderFulfilled extends Mailable
 
     public function content(): Content
     {
-        // Gather all licenses for this user that relate to this order's product(s)
+        // Gather all active licenses for this user (covers bundle expansion).
         $licenses = License::where('user_id', $this->order->user_id)
+            ->where('status', 'active')
             ->with('product')
             ->get()
             ->map(fn ($lic) => [
                 'product_name' => $lic->product?->name ?? 'License',
                 'license_key'  => $lic->license_key,
             ])
+            ->filter(fn ($l) => ! empty($l['license_key']))
             ->values()
             ->all();
 

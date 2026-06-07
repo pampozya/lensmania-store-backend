@@ -164,10 +164,7 @@ class FulfillmentService
                     ->send(new OrderFulfilled($freshOrder));
             }
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('fulfillment_email_failed', [
-                'order_id' => $order->id,
-                'error'    => $e->getMessage(),
-            ]);
+            report($e);
         }
     }
 
@@ -230,10 +227,7 @@ class FulfillmentService
                     ->send(new OrderFulfilled($freshOrder));
             }
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('static_fulfillment_email_failed', [
-                'order_id' => $order->id,
-                'error'    => $e->getMessage(),
-            ]);
+            report($e);
         }
 
         return true;

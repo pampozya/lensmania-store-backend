@@ -12,8 +12,10 @@
         <h1 style="margin:0;font-size:26px;color:#fff;font-weight:800;letter-spacing:-.03em">
           @if(count($licenses) > 1)
             Studio Pass activated.
-          @else
+          @elseif(count($licenses) === 1)
             {{ $licenses[0]['product_name'] }} activated.
+          @else
+            {{ $order->product_name }} activated.
           @endif
         </h1>
         <p style="margin:12px 0 0;font-size:14px;color:#a2a2ad">Your license {{ count($licenses) > 1 ? 'keys are' : 'key is' }} ready to use.</p>

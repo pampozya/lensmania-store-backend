@@ -67,7 +67,7 @@ services:
       - key: APP_FALLBACK_LOCALE
         value: en
       - key: LOG_CHANNEL
-        value: stack
+        value: stderr
       - key: LOG_LEVEL
         value: info
       - key: DB_CONNECTION
