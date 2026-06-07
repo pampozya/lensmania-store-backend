@@ -60,7 +60,7 @@ services:
       - key: MAIL_FROM_NAME
         value: Lensmania Labs
       - key: CORS_ALLOWED_ORIGINS
-        value: https://labs.lensmania.ae
+        value: https://labs.lensmania.ae,http://localhost:5173,http://127.0.0.1:5173
       - key: GOOGLE_CLIENT_ID
         value: 418174232558-8qn833qkhkb20kh7i96c1klpmekqhb72.apps.googleusercontent.com
       - key: JWT_SECRET
