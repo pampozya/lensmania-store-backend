@@ -52,15 +52,13 @@ class ClearTestData extends Command
         }
         $this->line('Users to KEEP:   ' . implode(', ', $this->keepEmails));
 
-        $ordersCount = Order::whereIn('user_id', $testUserIds)->count();
-        $licCount    = License::whereIn('user_id', $testUserIds)->count();
-        $entCount    = Entitlement::whereIn('user_id', $testUserIds)->count();
-
         $this->line('');
-        $this->line("Orders to delete (test users): {$ordersCount}");
-        $this->line("Licenses to delete (test users): {$licCount}");
-        $this->line("Entitlements to delete (test users): {$entCount}");
+        $this->line('FULL ZERO mode:');
+        $this->line('Orders to delete (ALL): ' . Order::count());
+        $this->line('Licenses to delete (ALL): ' . License::count());
+        $this->line('Entitlements to delete (ALL): ' . Entitlement::count());
         $this->line('Analytics to wipe: site_visits, site_events, promo_redemptions, affiliate_events, affiliate_visits (ALL rows)');
+        $this->line('Promos: UNTOUCHED (storefront_promos stays active)');
 
         if ($dry) {
             $this->info('Dry run complete — nothing deleted.');
@@ -68,10 +66,11 @@ class ClearTestData extends Command
         }
 
         DB::transaction(function () use ($testUserIds) {
-            // Order-scoped children first
-            Entitlement::whereIn('user_id', $testUserIds)->delete();
-            License::whereIn('user_id', $testUserIds)->delete();
-            Order::whereIn('user_id', $testUserIds)->delete();
+            // FULL ZERO: wipe ALL orders/licenses/entitlements (every account, incl. kept users)
+            // so dashboard numbers read $0.00 / 0 sales. Kept users remain as accounts with no orders.
+            Entitlement::query()->delete();
+            License::query()->delete();
+            Order::query()->delete();
 
             // Analytics — all of it was self-testing
             SiteVisit::query()->delete();
@@ -80,11 +79,11 @@ class ClearTestData extends Command
             AffiliateEvent::query()->delete();
             AffiliateVisit::query()->delete();
 
-            // Finally the test users
+            // Delete only the TEST user accounts; keep the keep-list (pampozya) as a clean account
             User::whereIn('id', $testUserIds)->delete();
         });
 
-        $this->info('✅ Test data cleared. pampozya@gmail.com preserved. Promos untouched (still active).');
+        $this->info('✅ Fully zeroed: all orders/licenses/analytics cleared. ' . implode(', ', $this->keepEmails) . ' kept as clean account(s). Promos untouched (still active).');
         return self::SUCCESS;
     }
 }
