@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\License\LicenseController;
 use App\Http\Controllers\PromoController;
+use App\Http\Controllers\TrialController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->get('/health', function () {
@@ -37,6 +38,9 @@ Route::middleware('api.jwt')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::get('/auth/orders', [AuthController::class, 'orders']);
     Route::post('/auth/orders/{order}/resend-email', [AuthController::class, 'resendEmail'])->middleware('throttle:5,1');
+    Route::get('/trial/status', [TrialController::class, 'status'])->middleware('throttle:60,1');
+    Route::post('/trial/start', [TrialController::class, 'start'])->middleware('throttle:10,1');
+    Route::post('/trial/consume', [TrialController::class, 'consume'])->middleware('throttle:60,1');
     Route::post('/checkout/static-intent', [CheckoutController::class, 'staticIntent'])->middleware('throttle:60,1');
     Route::post('/checkout/paypal-order', [CheckoutController::class, 'createStorefrontPayPalOrder'])->middleware('throttle:30,1');
 });

@@ -15,7 +15,10 @@ use RuntimeException;
 
 class FulfillmentService
 {
-    public function __construct(private AuditService $auditService)
+    public function __construct(
+        private AuditService $auditService,
+        private TrialService $trialService,
+    )
     {
     }
 
@@ -149,6 +152,8 @@ class FulfillmentService
                 }
             }
 
+            $this->trialService->markConvertedForUserId((int) $order->user_id);
+
             $this->auditService->logEvent('paypal_fulfillment_success', $order, [
                 'from_return' => $fromReturn,
                 'capture_id' => $captureId,
@@ -215,6 +220,8 @@ class FulfillmentService
                     ]);
                 }
             }
+
+            $this->trialService->markConvertedForUserId((int) $order->user_id);
 
             $this->auditService->logEvent('static_fulfillment_success', $order, [
                 'product_count' => count($productIds),

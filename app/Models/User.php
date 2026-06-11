@@ -52,6 +52,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(License::class);
     }
 
+    public function trial()
+    {
+        return $this->hasOne(Trial::class);
+    }
+
     public function supportNotes()
     {
         return $this->hasMany(SupportNote::class);
