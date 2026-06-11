@@ -2,5 +2,5 @@
 
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('lensmania:reconcile-paypal --stale-minutes=20')
+Schedule::command('orders:reconcile-paypal --stale-minutes=20')
     ->everyFifteenMinutes();

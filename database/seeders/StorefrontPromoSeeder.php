@@ -11,7 +11,7 @@ class StorefrontPromoSeeder extends Seeder
     {
         StorefrontPromo::upsert([
             [
-                // 100% test code — free checkout, no PayPal links needed.
+                // Production kill-switch: keep the test code record, but never expose it.
                 'code' => 'TEST100',
                 'label' => 'Test 100% Discount',
                 'affiliate' => 'test',
@@ -22,7 +22,7 @@ class StorefrontPromoSeeder extends Seeder
                 'link_hushcut' => null,
                 'link_babelcut' => null,
                 'link_bundle' => null,
-                'active' => true,
+                'active' => false,
                 'expires_at' => null,
                 'created_at' => now(),
                 'updated_at' => now(),

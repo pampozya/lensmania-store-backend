@@ -8,12 +8,14 @@ use App\Http\Requests\CreatePaypalOrderRequest;
 use App\Jobs\FulfillOrder;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\StorefrontPromo;
 use App\Services\CheckoutService;
 use App\Services\FulfillmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class CheckoutController extends Controller
 {
@@ -94,6 +96,83 @@ class CheckoutController extends Controller
         ], 201);
     }
 
+    public function createStorefrontPayPalOrder(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'product_slug' => ['required', 'string', 'in:hushcut,babelcut,bundle'],
+            'promo_code' => ['nullable', 'string', 'max:64'],
+            'amount_usd' => ['required', 'numeric', 'min:0'],
+            'selection_metadata' => ['nullable', 'array'],
+        ]);
+
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $product = $this->storefrontProduct($data['product_slug']);
+        $promoCode = $this->normalizePromoCode($data['promo_code'] ?? null);
+        $amountCents = $this->storefrontAmountCents($product, $promoCode);
+        $clientAmountCents = (int) round(((float) $data['amount_usd']) * 100);
+
+        if ($clientAmountCents !== $amountCents) {
+            throw ValidationException::withMessages([
+                'amount_usd' => 'Checkout amount does not match the current server price.',
+            ]);
+        }
+
+        $metadata = $data['selection_metadata'] ?? [];
+        $metadata['checkout_source'] = 'paypal_orders_api';
+        $metadata['server_amount_usd'] = number_format($amountCents / 100, 2, '.', '');
+
+        $order = Order::create([
+            'user_id' => $user->id,
+            'product_id' => $product->id,
+            'product_slug' => $product->slug,
+            'amount_cents' => $amountCents,
+            'amount_usd' => number_format($amountCents / 100, 2, '.', ''),
+            'currency' => 'USD',
+            'status' => 'created',
+            'api_status' => 'pending',
+            'promo_code' => $promoCode,
+            'selection_metadata' => $metadata,
+            'purchased_at' => now(),
+        ]);
+
+        if ($amountCents === 0) {
+            $fulfilled = $this->fulfillmentService->fulfillStaticOrder($order);
+
+            return response()->json([
+                'ok' => true,
+                'order_id' => $order->id,
+                'status' => $order->fresh()->derived_status,
+                'fulfilled' => $fulfilled,
+                'approve_url' => $this->frontendUrl('/thank-you?payment=confirmed&order=' . $order->id),
+            ], 201);
+        }
+
+        try {
+            $approveUrl = $this->checkoutService->createPayPalOrderForOrder(
+                $order,
+                null,
+                url('/checkout/return'),
+                $this->frontendUrl('/buy?payment=cancelled#' . $product->slug),
+            );
+        } catch (\Throwable $e) {
+            $order->forceFill(['status' => 'failed'])->save();
+            Log::error('paypal_order_create_failed', ['order_id' => $order->id, 'error' => $e->getMessage()]);
+
+            return response()->json(['error' => 'PayPal checkout is temporarily unavailable'], 502);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'order_id' => $order->id,
+            'paypal_order_id' => $order->fresh()->paypal_order_id,
+            'approve_url' => $approveUrl,
+        ], 201);
+    }
+
     /**
      * Called by the React thank-you page after returning from PayPal.
      * Fulfills the most recent pending static order for the logged-in user.
@@ -154,20 +233,29 @@ class CheckoutController extends Controller
 
     public function return(Request $request): RedirectResponse
     {
-        $order = $this->checkoutService->captureReturnedPayPalOrder(
-            (string) $request->query('token', '')
-        );
+        try {
+            $order = $this->checkoutService->captureReturnedPayPalOrder(
+                (string) $request->query('token', '')
+            );
 
-        if ($order instanceof \App\Models\Order) {
-            $this->fulfillmentService->fulfillIfNeededFromWebhookOrReturn($order, true);
+            if ($order instanceof Order) {
+                return redirect()->away($this->frontendUrl('/thank-you?payment=confirmed&order=' . $order->id));
+            }
+        } catch (\Throwable $e) {
+            Log::error('paypal_return_capture_failed', [
+                'paypal_order_id' => (string) $request->query('token', ''),
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->away($this->frontendUrl('/thank-you?payment=error'));
         }
 
-        return redirect()->route('checkout.thank-you');
+        return redirect()->away($this->frontendUrl('/thank-you?payment=pending'));
     }
 
     public function cancel(): RedirectResponse
     {
-        return redirect('/')->with('checkout', 'cancelled');
+        return redirect()->away($this->frontendUrl('/buy?payment=cancelled'));
     }
 
     public function paypalWebhook(Request $request): JsonResponse
@@ -177,5 +265,80 @@ class CheckoutController extends Controller
         }
 
         return response()->json(['ok' => true]);
+    }
+
+    private function storefrontProduct(string $slug): Product
+    {
+        return Product::firstOrCreate(
+            ['slug' => $slug],
+            [
+                'name' => match ($slug) {
+                    'hushcut' => 'HushCut',
+                    'babelcut' => 'BabelCut',
+                    default => 'Studio Pass',
+                },
+                'price_cents' => match ($slug) {
+                    'bundle' => 5000,
+                    default => 3500,
+                },
+                'is_bundle' => $slug === 'bundle',
+                'active' => true,
+            ]
+        );
+    }
+
+    private function storefrontAmountCents(Product $product, ?string $promoCode): int
+    {
+        $baseCents = (int) $product->price_cents;
+
+        if ($promoCode === null) {
+            return $baseCents;
+        }
+
+        if ($promoCode === 'TEST100') {
+            throw ValidationException::withMessages(['promo_code' => 'Promo code is unavailable.']);
+        }
+
+        $promo = StorefrontPromo::query()
+            ->where('code', $promoCode)
+            ->where('active', true)
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>=', now());
+            })
+            ->first();
+
+        if (! $promo) {
+            throw ValidationException::withMessages(['promo_code' => 'Promo code is not valid.']);
+        }
+
+        $fixedPrice = match ($product->slug) {
+            'hushcut' => $promo->price_hushcut,
+            'babelcut' => $promo->price_babelcut,
+            'bundle' => $promo->price_bundle,
+            default => null,
+        };
+
+        if ($fixedPrice !== null) {
+            return max(0, (int) round(((float) $fixedPrice) * 100));
+        }
+
+        if ($promo->discount_percent !== null) {
+            return max(0, (int) round($baseCents * (1 - ((float) $promo->discount_percent / 100))));
+        }
+
+        return $baseCents;
+    }
+
+    private function normalizePromoCode(?string $code): ?string
+    {
+        $normalized = strtoupper((string) preg_replace('/\s+/', '', (string) $code));
+
+        return $normalized === '' ? null : $normalized;
+    }
+
+    private function frontendUrl(string $path): string
+    {
+        return rtrim((string) config('app.frontend_url'), '/') . '/' . ltrim($path, '/');
     }
 }

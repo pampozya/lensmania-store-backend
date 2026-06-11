@@ -229,14 +229,18 @@ class AuthController extends Controller
             })->values()->all();
         } else {
             $license = $licenses->get($product?->id);
+            $licenseKey = $license?->license_key ?: $order->license_key;
+            $downloadUrl = $license ? $this->resolveDownloadUrl($order->product_slug, $order) : ($order->download_url ?: null);
             $licenseCards = [[
                 'product_slug' => $order->product_slug,
                 'product_name' => $order->product_name,
-                'license_key' => $license?->license_key,
-                'license_status' => $license?->status ?? 'pending',
-                'download_url' => $license ? $this->resolveDownloadUrl($order->product_slug, $order) : null,
+                'license_key' => $licenseKey,
+                'license_status' => $license?->status ?? ($licenseKey ? 'active' : 'pending'),
+                'download_url' => $downloadUrl,
             ]];
         }
+
+        $primaryLicense = $licenseCards[0] ?? [];
 
         return [
             'id' => $order->id,
@@ -247,6 +251,8 @@ class AuthController extends Controller
             'status' => $order->derived_status,
             'is_bundle' => $isBundleOrder,
             'licenses' => $licenseCards,
+            'license_key' => $isBundleOrder ? null : ($primaryLicense['license_key'] ?? null),
+            'download_url' => $isBundleOrder ? null : ($primaryLicense['download_url'] ?? null),
             'selection_metadata' => $order->selection_metadata,
             'purchased_at' => optional($order->purchased_at)->toIso8601String(),
         ];

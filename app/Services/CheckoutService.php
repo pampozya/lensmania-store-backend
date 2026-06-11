@@ -70,21 +70,28 @@ class CheckoutService
             'status' => 'created',
         ]);
 
-        $orderData = [
-            'quote_token' => $quoteToken,
-            'amount_cents' => $quote->amount_cents,
-            'currency' => $quote->currency,
-        ];
+        return $this->createPayPalOrderForOrder($order->fresh(), $quoteToken);
+    }
 
-        $order = $order->fresh();
-
-        $payPalOrder = $this->payPalService->createOrder($orderData);
+    public function createPayPalOrderForOrder(Order $order, ?string $quoteToken = null, ?string $returnUrl = null, ?string $cancelUrl = null): string
+    {
+        $payPalOrder = $this->payPalService->createOrder([
+            'order_id' => $order->id,
+            'quote_token' => $quoteToken ?? '',
+            'amount_cents' => $order->amount_cents,
+            'currency' => $order->currency,
+            'description' => $order->product_name,
+            'return_url' => $returnUrl ?? url('/checkout/return'),
+            'cancel_url' => $cancelUrl ?? rtrim((string) config('app.frontend_url'), '/') . '/buy?payment=cancelled',
+        ]);
 
         $order->forceFill([
             'paypal_order_id' => $payPalOrder['id'],
+            'status' => 'created',
+            'api_status' => 'pending',
         ])->save();
 
-        $this->auditService->logEvent('paypal_order_created', null, [
+        $this->auditService->logEvent('paypal_order_created', $order, [
             'quote_token' => $quoteToken,
             'order_id' => $order->id,
             'paypal_order_id' => $payPalOrder['id'],
@@ -121,6 +128,13 @@ class CheckoutService
         }
 
         $payload = $request->all();
+        $eventType = (string) $request->input('event_type');
+        if ($eventType !== 'PAYMENT.CAPTURE.COMPLETED') {
+            $this->auditService->logEvent('paypal_webhook_ignored', null, ['type' => $eventType]);
+
+            return true;
+        }
+
         $resource = is_array($payload['resource'] ?? null) ? $payload['resource'] : [];
         $capture = [
             'id' => (string) ($resource['id'] ?? ''),
@@ -130,28 +144,54 @@ class CheckoutService
             'invoice_id' => (string) ($resource['invoice_id'] ?? ''),
         ];
 
-        $paypalOrderId = $capture['custom_id'] !== '' ? $capture['custom_id'] : $capture['invoice_id'];
-        if ($paypalOrderId === '') {
+        $order = $this->resolveOrderFromWebhookResource($resource, $capture);
+        if (! $order) {
             $this->auditService->logEvent('paypal_webhook_missing_order_reference', null, [
                 'resource_id' => $capture['id'],
-            ]);
-
-            return false;
-        }
-
-        $order = Order::query()->where('paypal_order_id', $paypalOrderId)->first();
-        if (! $order) {
-            $this->auditService->logEvent('paypal_webhook_order_not_found', null, [
-                'paypal_order_id' => $paypalOrderId,
-                'capture_id' => $capture['id'],
+                'custom_id' => $capture['custom_id'],
+                'invoice_id' => $capture['invoice_id'],
             ]);
 
             return false;
         }
 
         $this->fulfillmentService->fulfill($order, $capture, false);
-        $this->auditService->logEvent('paypal_webhook_received', $order, ['type' => (string) $request->input('event_type')]);
+        $this->auditService->logEvent('paypal_webhook_received', $order, ['type' => $eventType]);
 
         return true;
+    }
+
+    private function resolveOrderFromWebhookResource(array $resource, array $capture): ?Order
+    {
+        $paypalOrderId = (string) data_get($resource, 'supplementary_data.related_ids.order_id', '');
+        if ($paypalOrderId !== '') {
+            $order = Order::query()->where('paypal_order_id', $paypalOrderId)->first();
+            if ($order) {
+                return $order;
+            }
+        }
+
+        $customId = (string) ($capture['custom_id'] ?? '');
+        if ($customId !== '' && ctype_digit($customId)) {
+            $order = Order::query()->whereKey((int) $customId)->first();
+            if ($order) {
+                return $order;
+            }
+        }
+
+        $invoiceId = (string) ($capture['invoice_id'] ?? '');
+        if (preg_match('/^LM-(\d+)$/', $invoiceId, $matches)) {
+            $order = Order::query()->whereKey((int) $matches[1])->first();
+            if ($order) {
+                return $order;
+            }
+        }
+
+        $legacyOrderId = $customId !== '' ? $customId : $invoiceId;
+        if ($legacyOrderId !== '') {
+            return Order::query()->where('paypal_order_id', $legacyOrderId)->first();
+        }
+
+        return null;
     }
 }

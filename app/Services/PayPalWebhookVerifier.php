@@ -7,6 +7,10 @@ use Illuminate\Http\Request;
 
 class PayPalWebhookVerifier implements PayPalWebhookVerifierContract
 {
+    public function __construct(private PayPalService $payPalService)
+    {
+    }
+
     public function verify(Request $request): bool
     {
         $webhookId = (string) config('paypal.webhook_id', env('PAYPAL_WEBHOOK_ID', ''));
@@ -23,7 +27,11 @@ class PayPalWebhookVerifier implements PayPalWebhookVerifierContract
             return false;
         }
 
-        return true;
+        try {
+            return $this->payPalService->verifyWebhookSignature($request, $webhookId);
+        } catch (\Throwable $e) {
+            report($e);
+            return false;
+        }
     }
 }
-

@@ -37,6 +37,8 @@ services:
         value: no-reply@lensmania.ae
       - key: MAIL_FROM_NAME
         value: Lensmania Labs
+      - key: FRONTEND_URL
+        value: https://labs.lensmania.ae
       - key: JWT_SECRET
         sync: false
       - key: LOG_CHANNEL
@@ -106,6 +108,16 @@ services:
         value: https://labs.lensmania.ae,http://localhost:5173,http://127.0.0.1:5173
       - key: GOOGLE_CLIENT_ID
         value: 418174232558-8qn833qkhkb20kh7i96c1klpmekqhb72.apps.googleusercontent.com
+      - key: FRONTEND_URL
+        value: https://labs.lensmania.ae
+      - key: PAYPAL_ENV
+        value: live
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
       - key: JWT_SECRET
         sync: false
       - key: MAX_OFFLINE_GRACE_SECONDS

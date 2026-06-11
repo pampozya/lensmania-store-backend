@@ -38,6 +38,7 @@ Route::middleware('api.jwt')->group(function () {
     Route::get('/auth/orders', [AuthController::class, 'orders']);
     Route::post('/auth/orders/{order}/resend-email', [AuthController::class, 'resendEmail'])->middleware('throttle:5,1');
     Route::post('/checkout/static-intent', [CheckoutController::class, 'staticIntent'])->middleware('throttle:60,1');
+    Route::post('/checkout/paypal-order', [CheckoutController::class, 'createStorefrontPayPalOrder'])->middleware('throttle:30,1');
 });
 
 Route::post('/license/activate', [LicenseController::class, 'activate'])

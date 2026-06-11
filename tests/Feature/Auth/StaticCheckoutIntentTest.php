@@ -51,3 +51,43 @@ it('requires authentication before creating a static checkout intent', function 
         'checkout_url' => 'https://www.paypal.com/ncp/payment/example',
     ])->assertUnauthorized();
 });
+
+it('creates a backend paypal order for storefront checkout', function () {
+    $user = User::factory()->create();
+    $token = app(JwtService::class)->issue($user);
+
+    $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('/api/checkout/paypal-order', [
+            'product_slug' => 'bundle',
+            'amount_usd' => 50.00,
+            'selection_metadata' => [
+                'hushcut' => ['platform' => 'mac', 'app' => 'premiere'],
+                'babelcut' => ['platform' => 'mac', 'app' => 'premiere'],
+            ],
+        ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('ok', true)
+        ->assertJsonStructure(['order_id', 'paypal_order_id', 'approve_url']);
+
+    $order = Order::query()->latest()->firstOrFail();
+    expect($order->user_id)->toBe($user->id);
+    expect($order->product_slug)->toBe('bundle');
+    expect($order->amount_cents)->toBe(5000);
+    expect($order->paypal_order_id)->not->toBeNull();
+    expect($order->api_status)->toBe('pending');
+});
+
+it('rejects disabled test promo on storefront checkout', function () {
+    $user = User::factory()->create();
+    $token = app(JwtService::class)->issue($user);
+
+    $this->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('/api/checkout/paypal-order', [
+            'product_slug' => 'bundle',
+            'promo_code' => 'TEST100',
+            'amount_usd' => 0,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['promo_code']);
+});

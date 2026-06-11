@@ -10,6 +10,7 @@ class PromoController extends Controller
     {
         $promos = StorefrontPromo::query()
             ->where('active', true)
+            ->where('code', '!=', 'TEST100')
             ->where(function ($query) {
                 $query->whereNull('expires_at')
                     ->orWhere('expires_at', '>=', now());

@@ -2,10 +2,8 @@
 
 namespace App\Observers;
 
-use App\Mail\OrderFulfilled;
 use App\Models\Order;
 use App\Services\LicenseService;
-use Illuminate\Support\Facades\Mail;
 
 class OrderObserver
 {
@@ -18,10 +16,4 @@ class OrderObserver
         }
     }
 
-    public function updated(Order $order): void
-    {
-        if ($order->wasChanged('api_status') && $order->api_status === 'fulfilled') {
-            Mail::to($order->user->email)->send(new OrderFulfilled($order));
-        }
-    }
 }
