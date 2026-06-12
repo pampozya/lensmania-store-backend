@@ -19,6 +19,7 @@ use App\Filament\Resources\LicenseDevices\LicenseDevicesResource;
 use App\Filament\Resources\Orders\OrdersResource;
 use App\Filament\Resources\Licenses\LicensesResource;
 use App\Filament\Resources\SupportNotes\SupportNotesResource;
+use App\Filament\Resources\Trials\TrialsResource;
 use App\Filament\Resources\Users\UsersResource;
 use App\Filament\Resources\StorefrontPromos\StorefrontPromosResource;
 use App\Filament\Resources\SiteVisits\SiteVisitsResource;
@@ -27,6 +28,7 @@ use App\Filament\Widgets\ProductRevenueChart;
 use App\Filament\Widgets\PromoAnalyticsOverview;
 use App\Filament\Widgets\RevenueTrendChart;
 use App\Filament\Widgets\StoreStatsOverview;
+use App\Filament\Widgets\TrialAnalyticsOverview;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -105,6 +107,7 @@ class AdminPanelProvider extends PanelProvider
                 EmailDeliveryLogsResource::class,
                 StorefrontPromosResource::class,
                 SiteVisitsResource::class,
+                TrialsResource::class,
             ])
             ->pages([
                 Pages\Dashboard::class,
@@ -121,6 +124,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->widgets([
                 StoreStatsOverview::class,
+                TrialAnalyticsOverview::class,
                 RevenueTrendChart::class,
                 ProductRevenueChart::class,
                 PromoAnalyticsOverview::class,
