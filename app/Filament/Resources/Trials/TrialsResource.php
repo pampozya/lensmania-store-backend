@@ -15,6 +15,8 @@ final class TrialsResource extends Resource
 {
     protected static ?string $model = Trial::class;
 
+    protected static ?string $slug = 'trials';
+
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
 
     protected static ?string $navigationLabel = 'Trials';
