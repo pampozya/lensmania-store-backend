@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\License;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Trial;
@@ -61,11 +62,54 @@ it('starts one three day trial per user', function () {
         'kind' => 'trial',
         'status' => 'active',
     ]);
+    $this->assertDatabaseMissing('licenses', [
+        'user_id' => $user->id,
+        'product_id' => Product::query()->where('slug', 'cinecut')->value('id'),
+        'kind' => 'paid',
+    ]);
 
     $this->withHeaders(bearerFor($user))
         ->postJson('/api/trial/start')
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['trial']);
+});
+
+it('issues only a trial licence for trial access', function () {
+    $user = User::factory()->create();
+    $product = Product::query()->where('slug', 'cinecut')->firstOrFail();
+
+    $response = $this->withHeaders(bearerFor($user))
+        ->postJson('/api/trial/start', [
+            'device_id' => 'trial-device-001',
+            'platform' => 'mac-arm64',
+            'app_version' => '0.2.0',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('license_kind', 'trial');
+
+    $trial = Trial::query()->where('user_id', $user->id)->firstOrFail();
+    $license = License::query()
+        ->where('user_id', $user->id)
+        ->where('product_id', $product->id)
+        ->firstOrFail();
+
+    expect($license->kind)->toBe('trial');
+    expect($license->status)->toBe('active');
+    expect(str_starts_with($license->license_key, 'LM-CINECUT-TRIAL-'))->toBeTrue();
+    expect($license->expires_at?->toIso8601String())->toBe($trial->expires_at?->toIso8601String());
+    expect($response->json('license_key'))->toBe($license->license_key);
+
+    expect(License::query()
+        ->where('user_id', $user->id)
+        ->where('product_id', $product->id)
+        ->where('kind', 'paid')
+        ->exists())->toBeFalse();
+
+    $this->withHeaders(bearerFor($user))
+        ->getJson('/api/auth/orders')
+        ->assertOk()
+        ->assertJsonPath('0.license_kind', 'trial')
+        ->assertJsonPath('0.licenses.0.license_kind', 'trial');
 });
 
 it('expires trial status after three days', function () {

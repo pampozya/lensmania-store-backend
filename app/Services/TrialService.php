@@ -298,6 +298,7 @@ class TrialService
             'minutes_remaining' => max(0, $trial->minutes_limit - $trial->minutes_used),
             'device_id' => $trial->device_id,
             'license_key' => $license?->license_key,
+            'license_kind' => 'trial',
             'download_url' => $this->downloadUrl($trial),
             'upgrade_required' => ! $paidAccess && ! $active,
             'converted_at' => $trial->converted_at?->toIso8601String(),
