@@ -60,16 +60,35 @@ return new class extends Migration {
                 }
 
                 if ($table === 'entitlements') {
+                    // Avoid unique-key collisions when retired products collapse into CineCut.
                     DB::table('entitlements')
                         ->whereIn('id', function ($query) use ($cinecutId, $retiredProductIds): void {
                             $query->select('retired.id')
                                 ->from('entitlements as retired')
-                                ->join('entitlements as cinecut', function ($join) use ($cinecutId): void {
-                                    $join->on('cinecut.user_id', '=', 'retired.user_id')
-                                        ->on('cinecut.order_id', '=', 'retired.order_id')
-                                        ->where('cinecut.product_id', '=', $cinecutId);
-                                })
-                                ->whereIn('retired.product_id', $retiredProductIds);
+                                ->whereIn('retired.product_id', $retiredProductIds)
+                                ->whereExists(function ($subquery) use ($cinecutId): void {
+                                    $subquery->selectRaw('1')
+                                        ->from('entitlements as cinecut')
+                                        ->whereColumn('cinecut.user_id', 'retired.user_id')
+                                        ->whereColumn('cinecut.order_id', 'retired.order_id')
+                                        ->where('cinecut.product_id', $cinecutId);
+                                });
+                        })
+                        ->delete();
+
+                    DB::table('entitlements')
+                        ->whereIn('id', function ($query) use ($retiredProductIds): void {
+                            $query->select('retired.id')
+                                ->from('entitlements as retired')
+                                ->whereIn('retired.product_id', $retiredProductIds)
+                                ->whereExists(function ($subquery) use ($retiredProductIds): void {
+                                    $subquery->selectRaw('1')
+                                        ->from('entitlements as kept')
+                                        ->whereColumn('kept.user_id', 'retired.user_id')
+                                        ->whereColumn('kept.order_id', 'retired.order_id')
+                                        ->whereIn('kept.product_id', $retiredProductIds)
+                                        ->whereColumn('kept.id', '<', 'retired.id');
+                                });
                         })
                         ->delete();
                 }
