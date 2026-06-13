@@ -4,6 +4,10 @@ use App\Models\Order;
 use App\Models\User;
 use App\Services\JwtService;
 
+beforeEach(function () {
+    $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+});
+
 it('creates a pending dashboard order with CineCut version selection before paypal redirect', function () {
     $user = User::factory()->create();
     $token = app(JwtService::class)->issue($user);
