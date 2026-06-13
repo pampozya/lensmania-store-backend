@@ -28,7 +28,7 @@ class OrderFulfilled extends Mailable
 
     public function content(): Content
     {
-        // Gather all active licenses for this user (covers bundle expansion).
+        // Gather all active licenses for this user.
         $licenses = License::where('user_id', $this->order->user_id)
             ->where('status', 'active')
             ->with('product')

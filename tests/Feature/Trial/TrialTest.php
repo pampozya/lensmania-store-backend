@@ -49,10 +49,18 @@ it('starts one three day trial per user', function () {
         ->assertJsonPath('allowed', true)
         ->assertJsonPath('device_id', 'mac-001')
         ->assertJsonPath('jobs_remaining', 3)
-        ->assertJsonPath('minutes_remaining', 60);
+        ->assertJsonPath('minutes_remaining', 60)
+        ->assertJsonPath('download_url', config('downloads.products.cinecut.url'));
 
     $trial = Trial::query()->where('user_id', $user->id)->firstOrFail();
     expect($trial->started_at->diffInHours($trial->expires_at))->toEqual(72);
+
+    $this->assertDatabaseHas('licenses', [
+        'user_id' => $user->id,
+        'product_id' => Product::query()->where('slug', 'cinecut')->value('id'),
+        'kind' => 'trial',
+        'status' => 'active',
+    ]);
 
     $this->withHeaders(bearerFor($user))
         ->postJson('/api/trial/start')
@@ -134,16 +142,16 @@ it('locks trial consumption to one device', function () {
 
 it('marks trial converted after paid fulfillment', function () {
     $user = User::factory()->create();
-    $product = Product::query()->where('slug', 'bundle')->firstOrFail();
+    $product = Product::query()->where('slug', 'cinecut')->firstOrFail();
 
     $this->withHeaders(bearerFor($user))->postJson('/api/trial/start')->assertCreated();
 
     $order = Order::factory()->create([
         'user_id' => $user->id,
         'product_id' => $product->id,
-        'product_slug' => 'bundle',
-        'amount_cents' => 5000,
-        'amount_usd' => 50.00,
+        'product_slug' => 'cinecut',
+        'amount_cents' => 3500,
+        'amount_usd' => 35.00,
         'status' => 'paid',
         'api_status' => 'paid',
     ]);

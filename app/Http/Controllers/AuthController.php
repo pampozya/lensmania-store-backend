@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\License;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Trial;
 use App\Models\User;
 use App\Services\JwtService;
 use Illuminate\Http\JsonResponse;
@@ -172,6 +174,11 @@ class AuthController extends Controller
             ->get()
             ->map(fn (Order $order) => $this->formatOrder($order, $licenses));
 
+        $trialCard = $this->formatTrialAccess($user);
+        if ($trialCard !== null) {
+            $rows->prepend($trialCard);
+        }
+
         return response()->json($rows, 200);
     }
 
@@ -207,38 +214,19 @@ class AuthController extends Controller
 
     private function formatOrder(Order $order, \Illuminate\Support\Collection $licenses): array
     {
-        // For bundles, expand into one card per license
         $product = $order->product;
-        $isBundleOrder = $product?->is_bundle || $order->product_slug === 'bundle';
-
-        if ($isBundleOrder) {
-            $items = \App\Models\BundleItem::where('bundle_product_id', $product->id)
-                ->with('itemProduct')
-                ->get();
-
-            $licenseCards = $items->map(function ($item) use ($licenses, $order) {
-                $license = $licenses->get($item->item_product_id);
-                $slug = $item->itemProduct?->slug ?? 'unknown';
-                return [
-                    'product_slug' => $slug,
-                    'product_name' => $item->itemProduct?->name ?? 'Unknown',
-                    'license_key' => $license?->license_key,
-                    'license_status' => $license?->status ?? 'pending',
-                    'download_url' => $license ? $this->resolveDownloadUrl($slug, $order) : null,
-                ];
-            })->values()->all();
-        } else {
-            $license = $licenses->get($product?->id);
-            $licenseKey = $license?->license_key ?: $order->license_key;
-            $downloadUrl = $license ? $this->resolveDownloadUrl($order->product_slug, $order) : ($order->download_url ?: null);
-            $licenseCards = [[
-                'product_slug' => $order->product_slug,
-                'product_name' => $order->product_name,
-                'license_key' => $licenseKey,
-                'license_status' => $license?->status ?? ($licenseKey ? 'active' : 'pending'),
-                'download_url' => $downloadUrl,
-            ]];
-        }
+        $license = $licenses->get($product?->id);
+        $licenseKey = $license?->license_key ?: $order->license_key;
+        $downloadUrl = $license ? $this->resolveDownloadUrl($order->product_slug, $order) : ($order->download_url ?: null);
+        $licenseCards = [[
+            'product_slug' => $order->product_slug,
+            'product_name' => $order->product_name,
+            'license_key' => $licenseKey,
+            'license_status' => $license?->status ?? ($licenseKey ? 'active' : 'pending'),
+            'license_kind' => $license?->kind ?? 'paid',
+            'expires_at' => $license?->expires_at?->toIso8601String(),
+            'download_url' => $downloadUrl,
+        ]];
 
         $primaryLicense = $licenseCards[0] ?? [];
 
@@ -249,12 +237,76 @@ class AuthController extends Controller
             'amount_usd' => $order->amount_usd,
             'promo_code' => $order->promo_code,
             'status' => $order->derived_status,
-            'is_bundle' => $isBundleOrder,
+            'is_bundle' => false,
             'licenses' => $licenseCards,
-            'license_key' => $isBundleOrder ? null : ($primaryLicense['license_key'] ?? null),
-            'download_url' => $isBundleOrder ? null : ($primaryLicense['download_url'] ?? null),
+            'license_key' => $primaryLicense['license_key'] ?? null,
+            'license_status' => $primaryLicense['license_status'] ?? null,
+            'license_kind' => $primaryLicense['license_kind'] ?? 'paid',
+            'download_url' => $primaryLicense['download_url'] ?? null,
             'selection_metadata' => $order->selection_metadata,
             'purchased_at' => optional($order->purchased_at)->toIso8601String(),
+        ];
+    }
+
+    private function formatTrialAccess(User $user): ?array
+    {
+        $trial = Trial::query()
+            ->where('user_id', $user->id)
+            ->latest('created_at')
+            ->first();
+
+        if (! $trial) {
+            return null;
+        }
+
+        $product = $trial->product ?: Product::query()->where('slug', 'cinecut')->first();
+        $license = $product
+            ? License::query()
+                ->where('user_id', $user->id)
+                ->where('product_id', $product->id)
+                ->where('kind', 'trial')
+                ->latest('created_at')
+                ->first()
+            : null;
+
+        $downloadUrl = $this->resolveDownloadUrlFromMetadata('cinecut', [
+            'platform' => $trial->platform ?: 'mac-arm64',
+            'app' => 'premiere',
+        ]);
+
+        return [
+            'id' => 'trial-' . $trial->id,
+            'product_slug' => 'cinecut',
+            'product_name' => 'CineCut Trial',
+            'amount_usd' => 0,
+            'promo_code' => null,
+            'status' => $trial->status,
+            'is_bundle' => false,
+            'licenses' => [[
+                'product_slug' => 'cinecut',
+                'product_name' => 'CineCut Trial',
+                'license_key' => $license?->license_key,
+                'license_status' => $license?->status ?? 'pending',
+                'license_kind' => 'trial',
+                'expires_at' => $trial->expires_at?->toIso8601String(),
+                'download_url' => $downloadUrl,
+            ]],
+            'license_key' => $license?->license_key,
+            'license_status' => $license?->status ?? 'pending',
+            'license_kind' => 'trial',
+            'download_url' => $downloadUrl,
+            'selection_metadata' => [
+                'platform' => $trial->platform ?: 'mac-arm64',
+                'app' => 'premiere',
+            ],
+            'purchased_at' => $trial->started_at?->toIso8601String(),
+            'trial' => [
+                'status' => $trial->status,
+                'started_at' => $trial->started_at?->toIso8601String(),
+                'expires_at' => $trial->expires_at?->toIso8601String(),
+                'jobs_remaining' => max(0, $trial->jobs_limit - $trial->jobs_used),
+                'minutes_remaining' => max(0, $trial->minutes_limit - $trial->minutes_used),
+            ],
         ];
     }
 
@@ -265,18 +317,22 @@ class AuthController extends Controller
      */
     private function resolveDownloadUrl(string $slug, Order $order): ?string
     {
+        // Figure out the selected platform + app for this product from the order metadata.
+        $meta = $order->selection_metadata ?? [];
+        $sel = $meta['product_version'] // single-product order
+            ?? $meta; // flat selection
+
+        return $this->resolveDownloadUrlFromMetadata($slug, $sel);
+    }
+
+    private function resolveDownloadUrlFromMetadata(string $slug, array $sel): ?string
+    {
         $config = config("downloads.products.{$slug}");
         if (! $config) {
             return null;
         }
 
-        // Figure out the selected platform + app for this product from the order metadata.
-        $meta = $order->selection_metadata ?? [];
-        $sel = $meta[$slug] // bundle: per-product selection (e.g. metadata['hushcut'])
-            ?? $meta['product_version'] // single-product order
-            ?? $meta; // flat selection
-
-        $platform = $sel['platform'] ?? 'mac';
+        $platform = $sel['platform'] ?? 'mac-arm64';
         $app = $sel['app'] ?? 'premiere';
 
         // Prefer the exact variant; fall back to the product default URL.

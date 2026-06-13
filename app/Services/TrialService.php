@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Entitlement;
+use App\Models\License;
 use App\Models\Product;
 use App\Models\Trial;
 use App\Models\User;
@@ -38,8 +39,7 @@ class TrialService
                 ]);
             }
 
-            $product = Product::query()->where('slug', 'bundle')->first()
-                ?: Product::query()->where('slug', 'hushcut')->first();
+            $product = Product::query()->where('slug', 'cinecut')->first();
 
             $trial = Trial::create([
                 'user_id' => $user->id,
@@ -56,6 +56,8 @@ class TrialService
                 'platform' => $this->stringOrNull($metadata['platform'] ?? null),
                 'app_version' => $this->stringOrNull($metadata['app_version'] ?? null),
             ]);
+
+            $this->ensureTrialLicense($user, $trial->fresh());
 
             return $this->format($trial->fresh(), false);
         });
@@ -75,6 +77,10 @@ class TrialService
         }
 
         $this->refreshComputedStatus($trial);
+        $trial = $trial->fresh();
+        if (! $paidAccess) {
+            $this->ensureTrialLicense($user, $trial);
+        }
 
         return $this->format($trial->fresh(), $paidAccess);
     }
@@ -154,6 +160,11 @@ class TrialService
             ])->save();
         }
 
+        License::query()
+            ->where('user_id', $userId)
+            ->where('kind', 'trial')
+            ->update(['status' => 'revoked']);
+
         return $trial->fresh();
     }
 
@@ -181,6 +192,13 @@ class TrialService
                 'limit_reached_at' => $limitReachedAt,
             ])->save();
         }
+
+        if ($newStatus !== 'active') {
+            License::query()
+                ->where('user_id', $trial->user_id)
+                ->where('kind', 'trial')
+                ->update(['status' => 'revoked']);
+        }
     }
 
     private function hasPaidAccess(User $user): bool
@@ -189,6 +207,49 @@ class TrialService
             ->where('user_id', $user->id)
             ->where('active', true)
             ->exists();
+    }
+
+    private function ensureTrialLicense(User $user, Trial $trial): ?License
+    {
+        $product = $trial->product ?: Product::query()->where('slug', 'cinecut')->first();
+        if (! $product) {
+            return null;
+        }
+
+        if ((int) $trial->product_id !== (int) $product->id) {
+            $trial->forceFill(['product_id' => $product->id])->save();
+        }
+
+        $license = License::query()
+            ->where('user_id', $user->id)
+            ->where('product_id', $product->id)
+            ->where('kind', 'trial')
+            ->first();
+
+        if (! $license) {
+            $license = License::create([
+                'user_id' => $user->id,
+                'product_id' => $product->id,
+                'license_key' => self::trialLicenseKey($user->id, $trial->id),
+                'kind' => 'trial',
+                'status' => 'active',
+                'expires_at' => $trial->expires_at,
+            ]);
+        } else {
+            $license->forceFill([
+                'status' => $trial->status === 'active' ? 'active' : 'revoked',
+                'expires_at' => $trial->expires_at,
+            ])->save();
+        }
+
+        return $license->fresh();
+    }
+
+    private static function trialLicenseKey(int $userId, int $trialId): string
+    {
+        $random = strtoupper(substr(hash('sha256', $userId . ':' . $trialId . ':' . config('app.key')), 0, 10));
+
+        return 'LM-CINECUT-TRIAL-' . $random;
     }
 
     private function emptyStatus(bool $paidAccess): array
@@ -216,6 +277,11 @@ class TrialService
     {
         $active = $trial->status === 'active';
         $allowed = $paidAccess || $active;
+        $license = License::query()
+            ->where('user_id', $trial->user_id)
+            ->where('product_id', $trial->product_id)
+            ->where('kind', 'trial')
+            ->first();
 
         return [
             'status' => $trial->status,
@@ -231,9 +297,27 @@ class TrialService
             'minutes_limit' => $trial->minutes_limit,
             'minutes_remaining' => max(0, $trial->minutes_limit - $trial->minutes_used),
             'device_id' => $trial->device_id,
+            'license_key' => $license?->license_key,
+            'download_url' => $this->downloadUrl($trial),
             'upgrade_required' => ! $paidAccess && ! $active,
             'converted_at' => $trial->converted_at?->toIso8601String(),
         ];
+    }
+
+    private function downloadUrl(Trial $trial): ?string
+    {
+        $config = config('downloads.products.cinecut');
+        if (! is_array($config)) {
+            return null;
+        }
+
+        $platform = $trial->platform ?: 'mac-arm64';
+        $app = 'premiere';
+
+        return $config['variants'][$platform][$app]
+            ?? $config['variants']['mac-arm64'][$app]
+            ?? $config['url']
+            ?? null;
     }
 
     private function stringOrNull(mixed $value): ?string

@@ -21,16 +21,12 @@ return new class extends Migration
             $table->string('label');                   // e.g. "Youssef VIP" (shown in UI)
             $table->string('affiliate')->nullable();   // e.g. youssef (commission attribution)
 
-            // Discount model: either a single percent OR per-product fixed prices.
+            // Discount model: either a single percent OR a fixed CineCut price.
             $table->unsignedInteger('discount_percent')->nullable(); // e.g. 10 (=10% off)
-            $table->decimal('price_hushcut', 8, 2)->nullable();      // fixed price overrides (USD)
-            $table->decimal('price_babelcut', 8, 2)->nullable();
-            $table->decimal('price_bundle', 8, 2)->nullable();
+            $table->decimal('price_cinecut', 8, 2)->nullable();      // fixed price override (USD)
 
-            // Per-product PayPal ncp payment links (full URLs).
-            $table->string('link_hushcut')->nullable();
-            $table->string('link_babelcut')->nullable();
-            $table->string('link_bundle')->nullable();
+            // PayPal ncp payment link (full URL).
+            $table->string('link_cinecut')->nullable();
 
             $table->boolean('active')->default(true);
             $table->timestamp('expires_at')->nullable();

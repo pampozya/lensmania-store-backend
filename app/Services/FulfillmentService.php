@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Mail\OrderFulfilled;
-use App\Models\BundleItem;
 use App\Models\Entitlement;
 use App\Models\License;
 use App\Models\Order;
@@ -147,7 +146,9 @@ class FulfillmentService
                         'user_id' => $order->user_id,
                         'product_id' => $productId,
                         'license_key' => $this->buildLicenseKey($order->user_id, $productId, $order->id),
+                        'kind' => 'paid',
                         'status' => 'active',
+                        'expires_at' => null,
                     ]);
                 }
             }
@@ -216,7 +217,9 @@ class FulfillmentService
                         'user_id'     => $order->user_id,
                         'product_id'  => $productId,
                         'license_key' => $this->buildLicenseKey($order->user_id, $productId, $order->id),
+                        'kind'        => 'paid',
                         'status'      => 'active',
+                        'expires_at'  => null,
                     ]);
                 }
             }
@@ -252,24 +255,6 @@ class FulfillmentService
 
     private function resolveProductIdsForOrder(int $productId): array
     {
-        $product = Product::find($productId);
-        if ($product === null) {
-            return [$productId];
-        }
-
-        if (! $product->is_bundle) {
-            return [$productId];
-        }
-
-        $bundleItems = BundleItem::query()
-            ->where('bundle_product_id', $productId)
-            ->pluck('item_product_id')
-            ->all();
-
-        if (! empty($bundleItems)) {
-            return $bundleItems;
-        }
-
         return [$productId];
     }
 

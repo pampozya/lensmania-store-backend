@@ -11,7 +11,7 @@
         <p style="margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#d4af37;font-weight:700">Lensmania Labs</p>
         <h1 style="margin:0;font-size:26px;color:#fff;font-weight:800;letter-spacing:-.03em">
           @if(count($licenses) > 1)
-            Studio Pass activated.
+            CineCut licenses activated.
           @elseif(count($licenses) === 1)
             {{ $licenses[0]['product_name'] }} activated.
           @else
@@ -45,7 +45,7 @@
         <h3 style="margin:28px 0 12px;font-size:15px;color:#111;font-weight:700">Next steps</h3>
         <ol style="margin:0;padding-left:20px;color:#555;line-height:2;font-size:14px">
           <li>Download the installer from your <a href="{{ $dashboardUrl }}" style="color:#7c3aed;text-decoration:none;font-weight:700">dashboard</a></li>
-          <li>Run the installer on your Mac or Windows machine</li>
+          <li>Run the installer on your Mac</li>
           <li>Open Adobe Premiere Pro → Window → Extensions</li>
           <li>Paste your license key when prompted</li>
         </ol>
@@ -66,7 +66,7 @@
 
       {{-- Footer --}}
       <tr><td style="padding:20px;text-align:center;font-size:12px;color:#aaa">
-        &copy; 2026 Lensmania Labs &mdash; Offline AI tools for Premiere Pro
+        &copy; 2026 Lensmania Labs &mdash; CineCut for Premiere Pro
       </td></tr>
 
     </table>

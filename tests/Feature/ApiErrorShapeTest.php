@@ -4,7 +4,7 @@ uses(RefreshDatabase::class);
 
 it('returns 401 (not 400) for unauthenticated protected endpoints', function () {
     $this->seed(\Database\Seeders\ProductSeeder::class);
-    $this->postJson('/api/checkout/quote', ['product_slug' => 'hushcut'])
+    $this->postJson('/api/checkout/quote', ['product_slug' => 'cinecut'])
         ->assertStatus(401)
         ->assertJson(['message' => 'Unauthenticated.']);
 });

@@ -146,6 +146,10 @@ class LicenseService
         return License::query()
             ->where('license_key', $licenseKey)
             ->where('status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
             ->when($user, fn ($query) => $query->where('user_id', $user->id))
             ->first();
     }
@@ -162,6 +166,8 @@ class LicenseService
             'result' => GraceStateMachine::STATE_ACTIVE_ONLINE,
             'message' => $message,
             'license_key' => $license->license_key,
+            'license_kind' => $license->kind ?? 'paid',
+            'expires_at' => $license->expires_at?->toIso8601String(),
             'device_id' => $device->device_id,
             'max_devices' => self::MAX_DEVICES,
             'active_devices' => $activeDevices,

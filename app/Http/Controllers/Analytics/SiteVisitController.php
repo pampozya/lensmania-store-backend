@@ -113,7 +113,7 @@ class SiteVisitController extends Controller
             str_contains($userAgent, 'iPhone') || str_contains($userAgent, 'iPad') => 'iOS',
             str_contains($userAgent, 'Android') => 'Android',
             str_contains($userAgent, 'Mac OS X') || str_contains($userAgent, 'Macintosh') => 'macOS',
-            str_contains($userAgent, 'Windows') => 'Windows',
+            str_contains($userAgent, 'Win') => 'Other',
             str_contains($userAgent, 'Linux') => 'Linux',
             default => 'Other',
         };

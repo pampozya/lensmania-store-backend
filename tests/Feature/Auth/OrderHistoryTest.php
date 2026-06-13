@@ -16,37 +16,30 @@ beforeEach(function () {
         'password' => 'super-secret',
     ]);
 
-    $this->hushcut = Product::factory()->create([
-        'slug' => 'hushcut',
-        'name' => 'HushCut',
-        'price_cents' => 3500,
-    ]);
-
-    $this->babelcut = Product::factory()->create([
-        'slug' => 'babelcut',
-        'name' => 'BabelCut',
-        'price_cents' => 3500,
-    ]);
+    $this->cinecut = Product::query()->firstOrCreate(
+        ['slug' => 'cinecut'],
+        ['name' => 'CineCut', 'price_cents' => 3500, 'is_bundle' => false, 'active' => true],
+    );
 
     $this->userToken = app(JwtService::class)->issue($this->user);
 
     Order::factory()->create([
         'user_id' => $this->user->id,
-        'product_id' => $this->hushcut->id,
-        'product_slug' => 'hushcut',
+        'product_id' => $this->cinecut->id,
+        'product_slug' => 'cinecut',
         'amount_usd' => 35.00,
         'promo_code' => 'NOOR10',
         'status' => 'paid',
         'api_status' => 'fulfilled',
-        'license_key' => 'LM-HUSHCUT-2026-ABC123',
-        'download_url' => 'https://example.com/hushcut.exe',
+        'license_key' => 'LM-CINECUT-2026-ABC123',
+        'download_url' => 'https://example.com/cinecut.dmg',
         'purchased_at' => now(),
     ]);
 
     Order::factory()->create([
         'user_id' => $this->otherUser->id,
-        'product_id' => $this->babelcut->id,
-        'product_slug' => 'babelcut',
+        'product_id' => $this->cinecut->id,
+        'product_slug' => 'cinecut',
         'amount_usd' => 35.00,
         'promo_code' => null,
         'status' => 'paid',
@@ -64,9 +57,9 @@ it('returns only current user orders', function () {
     $rows = $response->json();
     expect($rows)->toBeArray();
     expect(count($rows))->toBe(1);
-    expect($rows[0]['product_name'])->toBe('HushCut');
-    expect($rows[0]['product_slug'])->toBe('hushcut');
-    expect($rows[0]['license_key'])->toBe('LM-HUSHCUT-2026-ABC123');
+    expect($rows[0]['product_name'])->toBe('CineCut');
+    expect($rows[0]['product_slug'])->toBe('cinecut');
+    expect($rows[0]['license_key'])->toBe('LM-CINECUT-2026-ABC123');
 });
 
 it('returns 401 on orders without token', function () {
@@ -81,8 +74,8 @@ it('includes amount, status, and download link when fulfilled', function () {
     $response->assertJsonFragment([
         'amount_usd' => 35.0,
         'status' => 'fulfilled',
-        'product_name' => 'HushCut',
-        'license_key' => 'LM-HUSHCUT-2026-ABC123',
-        'download_url' => 'https://example.com/hushcut.exe',
+        'product_name' => 'CineCut',
+        'license_key' => 'LM-CINECUT-2026-ABC123',
+        'download_url' => 'https://example.com/cinecut.dmg',
     ]);
 });

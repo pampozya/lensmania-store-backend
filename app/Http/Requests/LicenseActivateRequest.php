@@ -16,7 +16,7 @@ class LicenseActivateRequest extends FormRequest
         return [
             'license_key' => ['required', 'string'],
             'device_id' => ['required', 'string', 'max:255'],
-            'platform' => ['required', 'string', 'in:mac-arm64,mac-x64,win-x64,macos,davinci-resolve'],
+            'platform' => ['required', 'string', 'in:mac-arm64'],
             'app_version' => ['required', 'string', 'max:64'],
         ];
     }

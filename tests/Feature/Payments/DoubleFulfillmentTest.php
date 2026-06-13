@@ -9,8 +9,8 @@ use App\Services\CheckoutService;
 
 beforeEach(function () {
     $this->product = Product::factory()->create([
-        'slug' => 'hushcut-double',
-        'name' => 'HushCut',
+        'slug' => 'cinecut-double',
+        'name' => 'CineCut',
         'price_cents' => 3500,
         'is_bundle' => false,
     ]);

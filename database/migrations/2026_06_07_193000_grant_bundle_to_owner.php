@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\BundleItem;
 use App\Models\License;
 use App\Models\Order;
 use App\Models\Product;
@@ -10,8 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * One-time grant: give pampozya@gmail.com a paid Studio Pass (bundle) for
- * Mac/Premiere, with active HushCut + BabelCut licenses, as if they paid.
+ * One-time grant: give pampozya@gmail.com a paid CineCut license for
+ * Mac/Premiere, as if they paid.
  * Safe to run on any environment — no-ops if the user doesn't exist or
  * already has the order/licenses.
  */
@@ -32,16 +31,16 @@ return new class extends Migration
         }
 
         $product = Product::firstOrCreate(
-            ['slug' => 'bundle'],
+            ['slug' => 'cinecut'],
             [
-                'name' => 'Studio Pass',
-                'price_cents' => 5000,
-                'is_bundle' => true,
+                'name' => 'CineCut',
+                'price_cents' => 3500,
+                'is_bundle' => false,
                 'active' => true,
             ]
         );
 
-        // Skip if a manual-grant bundle order already exists for this user.
+        // Skip if a manual-grant order already exists for this user.
         $already = Order::where('user_id', $user->id)
             ->where('product_id', $product->id)
             ->where('api_status', 'manual_grant')
@@ -55,7 +54,7 @@ return new class extends Migration
             $order = Order::create([
                 'user_id' => $user->id,
                 'product_id' => $product->id,
-                'product_slug' => 'bundle',
+                'product_slug' => 'cinecut',
                 'amount_cents' => $product->price_cents,
                 'amount_usd' => number_format($product->price_cents / 100, 2, '.', ''),
                 'currency' => 'USD',
@@ -63,7 +62,7 @@ return new class extends Migration
                 'api_status' => 'manual_grant',
                 'selection_metadata' => [
                     'product_version' => [
-                        'product' => 'bundle',
+                        'product' => 'cinecut',
                         'platform' => 'mac',
                         'app' => 'premiere',
                         'label' => 'macOS Premiere Pro',
@@ -74,13 +73,7 @@ return new class extends Migration
                 'purchased_at' => now(),
             ]);
 
-            // Bundle expands to its items (HushCut + BabelCut); fall back to bundle id.
-            $productIds = BundleItem::where('bundle_product_id', $product->id)
-                ->pluck('item_product_id')
-                ->all();
-            if (empty($productIds)) {
-                $productIds = [$product->id];
-            }
+            $productIds = [$product->id];
 
             foreach ($productIds as $pid) {
                 $exists = License::where('user_id', $user->id)

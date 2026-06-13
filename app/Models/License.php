@@ -10,8 +10,15 @@ class License extends Model
         'user_id',
         'product_id',
         'license_key',
+        'kind',
         'status',
+        'expires_at',
     ];
+
+    protected $casts = [
+        'expires_at' => 'datetime',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

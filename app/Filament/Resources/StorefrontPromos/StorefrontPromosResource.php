@@ -35,7 +35,7 @@ final class StorefrontPromosResource extends Resource
     protected static ?string $slug = 'storefront-promos';
 
     /**
-     * Check if this promo is 100% free (all prices are 0 or discount is 100).
+     * Check if this promo is 100% free (price is 0 or discount is 100).
      * Free promos don't require PayPal links.
      */
     private static function isFullyFreePromo(callable $get): bool
@@ -45,11 +45,9 @@ final class StorefrontPromosResource extends Resource
             return true;
         }
 
-        $hushcutPrice = (float) ($get('price_hushcut') ?? null);
-        $babelcutPrice = (float) ($get('price_babelcut') ?? null);
-        $bundlePrice = (float) ($get('price_bundle') ?? null);
+        $cinecutPrice = (float) ($get('price_cinecut') ?? null);
 
-        return $hushcutPrice === 0.0 && $babelcutPrice === 0.0 && $bundlePrice === 0.0;
+        return $cinecutPrice === 0.0 && $get('price_cinecut') !== null;
     }
 
     public static function form(Form $form): Form
@@ -85,7 +83,7 @@ final class StorefrontPromosResource extends Resource
 
             Section::make('Discount')
                 ->columns(1)
-                ->description('Choose either a single discount percent OR set fixed prices for each product. Note: If any price is set to 0 (100% discount), PayPal links are optional — checkout will skip payment and go straight to order confirmation.')
+                ->description('Choose either a discount percent OR a fixed CineCut price. If the price is 0, checkout skips payment and goes straight to order confirmation.')
                 ->schema([
                     TextInput::make('discount_percent')
                         ->label('Discount Percent')
@@ -95,42 +93,20 @@ final class StorefrontPromosResource extends Resource
                         ->placeholder('e.g., 10 (for 10% off)')
                         ->helperText('If set, applies to all products. Leave empty to use fixed prices instead.'),
 
-                    TextInput::make('price_hushcut')
-                        ->label('HushCut Price (USD)')
+                    TextInput::make('price_cinecut')
+                        ->label('CineCut Price (USD)')
                         ->numeric()
                         ->step(0.01)
                         ->placeholder('e.g., 15.00')
                         ->helperText('Fixed price override. Leave empty to use discount percent.'),
-
-                    TextInput::make('price_babelcut')
-                        ->label('BabelCut Price (USD)')
-                        ->numeric()
-                        ->step(0.01)
-                        ->placeholder('e.g., 15.00'),
-
-                    TextInput::make('price_bundle')
-                        ->label('Studio Pass Price (USD)')
-                        ->numeric()
-                        ->step(0.01)
-                        ->placeholder('e.g., 25.00'),
                 ]),
 
             Section::make('PayPal Links')
                 ->columns(1)
-                ->description('Per-product PayPal checkout links. Leave empty for 100% (free) promos — checkout skips payment. Required for paid promos or checkout will fall back to the default product price.')
+                ->description('CineCut PayPal checkout link. Leave empty for 100% free promos.')
                 ->schema([
-                    TextInput::make('link_hushcut')
-                        ->label('HushCut Link')
-                        ->placeholder('https://www.paypal.com/ncp/payment/8Z3B74X38WYHY or just the ID')
-                        ->maxLength(500),
-
-                    TextInput::make('link_babelcut')
-                        ->label('BabelCut Link')
-                        ->placeholder('https://www.paypal.com/ncp/payment/... or just the ID')
-                        ->maxLength(500),
-
-                    TextInput::make('link_bundle')
-                        ->label('Studio Pass Link')
+                    TextInput::make('link_cinecut')
+                        ->label('CineCut Link')
                         ->placeholder('https://www.paypal.com/ncp/payment/... or just the ID')
                         ->maxLength(500),
                 ]),
@@ -177,7 +153,7 @@ final class StorefrontPromosResource extends Resource
 
                 TextColumn::make('links_status')
                     ->label('PayPal Links')
-                    ->state(fn (StorefrontPromo $record): string => ($record->link_hushcut && $record->link_babelcut && $record->link_bundle) ? 'Complete' : 'Missing')
+                    ->state(fn (StorefrontPromo $record): string => $record->link_cinecut ? 'Complete' : 'Missing')
                     ->badge()
                     ->color(fn (string $state): string => $state === 'Complete' ? 'success' : 'danger'),
 
@@ -198,22 +174,17 @@ final class StorefrontPromosResource extends Resource
                     ->icon(fn (StorefrontPromo $record) => $record->active ? 'heroicon-o-no-symbol' : 'heroicon-o-check-circle')
                     ->color(fn (StorefrontPromo $record) => $record->active ? 'warning' : 'success')
                     ->action(function (StorefrontPromo $record): void {
-                        // 100% (free) promos skip PayPal entirely, so they don't need links.
-                        // Only block activation for PAID promos that are missing links.
+                        // 100% free promos skip PayPal entirely, so they don't need a link.
                         $isFree = $record->discount_percent == 100
-                            || ((float) $record->price_hushcut === 0.0
-                                && (float) $record->price_babelcut === 0.0
-                                && (float) $record->price_bundle === 0.0
-                                && ($record->price_hushcut !== null
-                                    || $record->price_babelcut !== null
-                                    || $record->price_bundle !== null));
+                            || ((float) $record->price_cinecut === 0.0
+                                && $record->price_cinecut !== null);
 
                         if (! $record->active
                             && ! $isFree
-                            && ! ($record->link_hushcut && $record->link_babelcut && $record->link_bundle)) {
+                            && ! $record->link_cinecut) {
                             Notification::make()
                                 ->title('Cannot activate')
-                                ->body('Add all 3 PayPal links before activating this paid promo (or set it to 100% off / $0).')
+                                ->body('Add the CineCut PayPal link before activating this paid promo, or set it to 100% off / $0.')
                                 ->danger()
                                 ->send();
 

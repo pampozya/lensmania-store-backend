@@ -12,15 +12,17 @@ return new class extends Migration
             return;
         }
 
+        $updates = [
+            'active' => false,
+            'updated_at' => now(),
+        ];
+        if (Schema::hasColumn('storefront_promos', 'link_cinecut')) {
+            $updates['link_cinecut'] = null;
+        }
+
         DB::table('storefront_promos')
             ->where('code', 'TEST100')
-            ->update([
-                'active' => false,
-                'link_hushcut' => null,
-                'link_babelcut' => null,
-                'link_bundle' => null,
-                'updated_at' => now(),
-            ]);
+            ->update($updates);
     }
 
     public function down(): void

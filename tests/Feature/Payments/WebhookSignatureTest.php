@@ -5,8 +5,8 @@ use App\Models\User;
 
 beforeEach(function () {
     $this->product = Product::factory()->create([
-        'slug' => 'hushcut-signature',
-        'name' => 'HushCut',
+        'slug' => 'cinecut-signature',
+        'name' => 'CineCut',
         'price_cents' => 3500,
         'is_bundle' => false,
     ]);

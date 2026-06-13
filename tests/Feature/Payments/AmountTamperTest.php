@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\BundleItem;
 use App\Models\License;
 use App\Models\Order;
 use App\Models\PriceQuote;
@@ -8,12 +7,10 @@ use App\Models\Product;
 use App\Models\User;
 
 beforeEach(function () {
-    $this->product = Product::factory()->create([
-        'slug' => 'hushcut',
-        'name' => 'HushCut',
-        'price_cents' => 3500,
-        'is_bundle' => false,
-    ]);
+    $this->product = Product::query()->firstOrCreate(
+        ['slug' => 'cinecut'],
+        ['name' => 'CineCut', 'price_cents' => 3500, 'is_bundle' => false, 'active' => true],
+    );
 
     $this->user = User::factory()->create([
         'email_verified_at' => now(),
@@ -114,4 +111,3 @@ it('also rejects a higher-than-quote amount and a wrong currency', function () {
     expect($order->fresh()->status)->not->toBe('paid');
     expect(License::count())->toBe(0);
 });
-

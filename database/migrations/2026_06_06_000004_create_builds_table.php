@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('builds', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
-            $table->enum('platform', ['mac-arm64', 'mac-x64', 'win-x64']);
+            $table->enum('platform', ['mac-arm64']);
             $table->string('version');
             $table->string('file_path');
             $table->string('checksum_sha256');

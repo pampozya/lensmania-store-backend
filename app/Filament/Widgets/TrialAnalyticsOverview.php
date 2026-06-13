@@ -57,7 +57,7 @@ class TrialAnalyticsOverview extends BaseWidget
 
         return [
             Stat::make('Trials Started', (string) $counts['total'])
-                ->description('Accounts that activated HushCut trial')
+                ->description('Accounts that activated CineCut trial')
                 ->color('primary'),
 
             Stat::make('Active Trials', (string) $counts['active'])

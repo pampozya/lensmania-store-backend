@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\BundleItem;
 use App\Models\License;
 use App\Models\Order;
 use App\Models\Product;
@@ -14,16 +13,15 @@ use Illuminate\Support\Facades\DB;
  * Manually grant a paid purchase + licenses to a user, as if they paid.
  *
  * Usage:
- *   php artisan grant:purchase pampozya@gmail.com bundle --platform=mac --app=premiere
- *   php artisan grant:purchase someone@example.com hushcut
+ *   php artisan grant:purchase someone@example.com cinecut --platform=mac-arm64 --app=premiere
  */
 class GrantPurchase extends Command
 {
     protected $signature = 'grant:purchase
         {email : The user account email}
-        {product : Product slug (hushcut, babelcut, or bundle)}
-        {--platform=mac : Platform (mac/windows)}
-        {--app=premiere : Application (premiere/resolve)}';
+        {product : Product slug (cinecut)}
+        {--platform=mac-arm64 : Platform}
+        {--app=premiere : Application}';
 
     protected $description = 'Grant a paid order + licenses to a user without payment (manual fulfillment)';
 
@@ -34,8 +32,8 @@ class GrantPurchase extends Command
         $platform = $this->option('platform');
         $app = $this->option('app');
 
-        if (! in_array($slug, ['hushcut', 'babelcut', 'bundle'], true)) {
-            $this->error("Invalid product slug: {$slug} (use hushcut, babelcut, or bundle)");
+        if ($slug !== 'cinecut') {
+            $this->error("Invalid product slug: {$slug} (use cinecut)");
             return self::FAILURE;
         }
 
@@ -48,13 +46,9 @@ class GrantPurchase extends Command
         $product = Product::firstOrCreate(
             ['slug' => $slug],
             [
-                'name' => match ($slug) {
-                    'hushcut' => 'HushCut',
-                    'babelcut' => 'BabelCut',
-                    default => 'Studio Pass',
-                },
-                'price_cents' => $slug === 'bundle' ? 5000 : 3500,
-                'is_bundle' => $slug === 'bundle',
+                'name' => 'CineCut',
+                'price_cents' => 3500,
+                'is_bundle' => false,
                 'active' => true,
             ]
         );
@@ -88,8 +82,7 @@ class GrantPurchase extends Command
 
             $this->info("Order created: id={$order->id}, status=paid");
 
-            // Resolve products (bundle expands to its items).
-            $productIds = $this->resolveProductIds($product->id);
+            $productIds = [$product->id];
 
             foreach ($productIds as $pid) {
                 $existing = License::where('user_id', $user->id)
@@ -105,7 +98,9 @@ class GrantPurchase extends Command
                     'user_id' => $user->id,
                     'product_id' => $pid,
                     'license_key' => $this->buildLicenseKey($user->id, $pid, $order->id),
+                    'kind' => 'paid',
                     'status' => 'active',
+                    'expires_at' => null,
                 ]);
 
                 $pName = Product::find($pid)?->name ?? "product {$pid}";
@@ -117,20 +112,6 @@ class GrantPurchase extends Command
         $this->info("✅ Done. {$user->email} now owns {$product->name} ({$platform}/{$app}).");
 
         return self::SUCCESS;
-    }
-
-    private function resolveProductIds(int $productId): array
-    {
-        $product = Product::find($productId);
-        if (! $product || ! $product->is_bundle) {
-            return [$productId];
-        }
-
-        $items = BundleItem::where('bundle_product_id', $productId)
-            ->pluck('item_product_id')
-            ->all();
-
-        return ! empty($items) ? $items : [$productId];
     }
 
     private function buildLicenseKey(int $userId, int $productId, int $orderId): string

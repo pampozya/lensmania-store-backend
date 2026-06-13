@@ -11,12 +11,8 @@ class StorefrontPromo extends Model
         'label',
         'affiliate',
         'discount_percent',
-        'price_hushcut',
-        'price_babelcut',
-        'price_bundle',
-        'link_hushcut',
-        'link_babelcut',
-        'link_bundle',
+        'price_cinecut',
+        'link_cinecut',
         'active',
         'expires_at',
     ];
@@ -25,9 +21,7 @@ class StorefrontPromo extends Model
         'active' => 'boolean',
         'expires_at' => 'datetime',
         'discount_percent' => 'integer',
-        'price_hushcut' => 'decimal:2',
-        'price_babelcut' => 'decimal:2',
-        'price_bundle' => 'decimal:2',
+        'price_cinecut' => 'decimal:2',
     ];
 
     public function setCodeAttribute(?string $value): void

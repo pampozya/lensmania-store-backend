@@ -48,8 +48,7 @@ final class LicenseDevicesResource extends Resource
                     'locked' => 'Locked',
                 ]),
                 SelectFilter::make('platform')->options([
-                    'macos' => 'macOS',
-                    'windows' => 'Windows',
+                    'mac-arm64' => 'macOS Apple Silicon',
                 ]),
             ]);
     }

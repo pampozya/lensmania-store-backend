@@ -20,8 +20,7 @@ final class SalesFunnel extends Page
     {
         $visits = SiteVisit::query()->count();
         $productViews = SiteVisit::query()->where(function ($query): void {
-            $query->where('path', 'like', '%hushcut%')
-                ->orWhere('path', 'like', '%babelcut%')
+            $query->where('path', 'like', '%cinecut%')
                 ->orWhere('path', 'like', '%buy.html%');
         })->count();
         $promoApplies = SiteEvent::query()->where('name', 'promo_applied')->count();
@@ -41,8 +40,7 @@ final class SalesFunnel extends Page
         $rows = collect([
             ['Visit', SiteVisit::query()->count()],
             ['Product/detail view', SiteVisit::query()->where(function ($query): void {
-                $query->where('path', 'like', '%hushcut%')
-                    ->orWhere('path', 'like', '%babelcut%')
+                $query->where('path', 'like', '%cinecut%')
                     ->orWhere('path', 'like', '%buy.html%');
             })->count()],
             ['Promo applied', SiteEvent::query()->where('name', 'promo_applied')->count()],

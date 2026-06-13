@@ -27,7 +27,7 @@ class CheckoutController extends Controller
     public function staticIntent(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'product_slug' => ['required', 'string', 'in:hushcut,babelcut,bundle'],
+            'product_slug' => ['required', 'string', 'in:cinecut'],
             'promo_code' => ['nullable', 'string', 'max:64'],
             'amount_usd' => ['required', 'numeric', 'min:0'],
             'checkout_url' => ['required', 'string', 'max:2048'],
@@ -42,16 +42,9 @@ class CheckoutController extends Controller
         $product = Product::firstOrCreate(
             ['slug' => $data['product_slug']],
             [
-                'name' => match ($data['product_slug']) {
-                    'hushcut' => 'HushCut',
-                    'babelcut' => 'BabelCut',
-                    default => 'Studio Pass',
-                },
-                'price_cents' => match ($data['product_slug']) {
-                    'bundle' => 5000,
-                    default => 3500,
-                },
-                'is_bundle' => $data['product_slug'] === 'bundle',
+                'name' => 'CineCut',
+                'price_cents' => 3500,
+                'is_bundle' => false,
                 'active' => true,
             ]
         );
@@ -99,7 +92,7 @@ class CheckoutController extends Controller
     public function createStorefrontPayPalOrder(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'product_slug' => ['required', 'string', 'in:hushcut,babelcut,bundle'],
+            'product_slug' => ['required', 'string', 'in:cinecut'],
             'promo_code' => ['nullable', 'string', 'max:64'],
             'amount_usd' => ['required', 'numeric', 'min:0'],
             'selection_metadata' => ['nullable', 'array'],
@@ -272,16 +265,9 @@ class CheckoutController extends Controller
         return Product::firstOrCreate(
             ['slug' => $slug],
             [
-                'name' => match ($slug) {
-                    'hushcut' => 'HushCut',
-                    'babelcut' => 'BabelCut',
-                    default => 'Studio Pass',
-                },
-                'price_cents' => match ($slug) {
-                    'bundle' => 5000,
-                    default => 3500,
-                },
-                'is_bundle' => $slug === 'bundle',
+                'name' => 'CineCut',
+                'price_cents' => 3500,
+                'is_bundle' => false,
                 'active' => true,
             ]
         );
@@ -313,9 +299,7 @@ class CheckoutController extends Controller
         }
 
         $fixedPrice = match ($product->slug) {
-            'hushcut' => $promo->price_hushcut,
-            'babelcut' => $promo->price_babelcut,
-            'bundle' => $promo->price_bundle,
+            'cinecut' => $promo->price_cinecut,
             default => null,
         };
 

@@ -7,7 +7,10 @@ it('creates a paid order from a valid webhook payload', function () {
     config(['paypal.webhook_id' => 'test-webhook-id']);
 
     $user = User::factory()->create();
-    Product::factory()->create(['slug' => 'hushcut']);
+    Product::query()->firstOrCreate(
+        ['slug' => 'cinecut'],
+        ['name' => 'CineCut', 'price_cents' => 3500, 'is_bundle' => false, 'active' => true],
+    );
 
     $response = $this->withHeaders([
         'PAYPAL-TRANSMISSION-ID' => 'tx-valid-1',
@@ -18,7 +21,7 @@ it('creates a paid order from a valid webhook payload', function () {
         'mc_gross' => '35.00',
         'mc_currency' => 'USD',
         'txn_id' => 'TXN-MANUAL-1',
-        'custom' => $user->id . ':hushcut',
+        'custom' => $user->id . ':cinecut',
         'invoice' => 'NOOR10',
         'payment_status' => 'Completed',
     ]);
@@ -28,7 +31,7 @@ it('creates a paid order from a valid webhook payload', function () {
 
     $this->assertDatabaseHas('orders', [
         'user_id' => $user->id,
-        'product_slug' => 'hushcut',
+        'product_slug' => 'cinecut',
         'paypal_payment_id' => 'TXN-MANUAL-1',
         'api_status' => 'paid',
     ]);
@@ -38,14 +41,17 @@ it('does not duplicate order for duplicate txn_id', function () {
     config(['paypal.webhook_id' => 'test-webhook-id']);
 
     $user = User::factory()->create();
-    Product::factory()->create(['slug' => 'hushcut']);
+    Product::query()->firstOrCreate(
+        ['slug' => 'cinecut'],
+        ['name' => 'CineCut', 'price_cents' => 3500, 'is_bundle' => false, 'active' => true],
+    );
 
     $payload = [
         'txn_type' => 'web_accept',
         'mc_gross' => '35.00',
         'mc_currency' => 'USD',
         'txn_id' => 'TXN-MANUAL-DUP',
-        'custom' => $user->id . ':hushcut',
+        'custom' => $user->id . ':cinecut',
         'payment_status' => 'Completed',
     ];
 
@@ -64,7 +70,7 @@ it('does not duplicate order for duplicate txn_id', function () {
     $this->assertDatabaseCount('orders', 1);
     $this->assertDatabaseHas('orders', [
         'user_id' => $user->id,
-        'product_slug' => 'hushcut',
+        'product_slug' => 'cinecut',
         'paypal_payment_id' => 'TXN-MANUAL-DUP',
     ]);
 });
@@ -73,14 +79,17 @@ it('returns received when webhook signature fails and logs an error', function (
     config(['paypal.webhook_id' => '']);
 
     $user = User::factory()->create();
-    Product::factory()->create(['slug' => 'hushcut']);
+    Product::query()->firstOrCreate(
+        ['slug' => 'cinecut'],
+        ['name' => 'CineCut', 'price_cents' => 3500, 'is_bundle' => false, 'active' => true],
+    );
 
     $response = $this->postJson('/api/payments/webhook', [
         'txn_type' => 'web_accept',
         'mc_gross' => '35.00',
         'mc_currency' => 'USD',
         'txn_id' => 'TXN-MANUAL-SIGN',
-        'custom' => $user->id . ':hushcut',
+        'custom' => $user->id . ':cinecut',
         'payment_status' => 'Completed',
     ]);
 
