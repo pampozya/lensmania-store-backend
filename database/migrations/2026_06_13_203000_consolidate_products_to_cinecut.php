@@ -59,6 +59,21 @@ return new class extends Migration {
                     continue;
                 }
 
+                if ($table === 'entitlements') {
+                    DB::table('entitlements')
+                        ->whereIn('id', function ($query) use ($cinecutId, $retiredProductIds): void {
+                            $query->select('retired.id')
+                                ->from('entitlements as retired')
+                                ->join('entitlements as cinecut', function ($join) use ($cinecutId): void {
+                                    $join->on('cinecut.user_id', '=', 'retired.user_id')
+                                        ->on('cinecut.order_id', '=', 'retired.order_id')
+                                        ->where('cinecut.product_id', '=', $cinecutId);
+                                })
+                                ->whereIn('retired.product_id', $retiredProductIds);
+                        })
+                        ->delete();
+                }
+
                 DB::table($table)
                     ->whereIn('product_id', $retiredProductIds)
                     ->update(['product_id' => $cinecutId]);
