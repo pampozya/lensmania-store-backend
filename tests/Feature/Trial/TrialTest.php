@@ -115,7 +115,14 @@ it('issues only a trial licence for trial access', function () {
 it('expires trial status after three days', function () {
     $user = User::factory()->create();
 
-    $this->withHeaders(bearerFor($user))->postJson('/api/trial/start')->assertCreated();
+    $licenseKey = $this->withHeaders(bearerFor($user))
+        ->postJson('/api/trial/start', [
+            'device_id' => 'mac-001',
+            'platform' => 'mac-arm64',
+            'app_version' => '0.2.0',
+        ])
+        ->assertCreated()
+        ->json('license_key');
 
     $this->travel(4)->days();
 
@@ -126,6 +133,22 @@ it('expires trial status after three days', function () {
         ->assertJsonPath('active', false)
         ->assertJsonPath('allowed', false)
         ->assertJsonPath('upgrade_required', true);
+
+    $this->postJson('/api/license/activate', [
+        'license_key' => $licenseKey,
+        'device_id' => 'mac-001',
+        'platform' => 'mac-arm64',
+        'app_version' => '0.2.0',
+    ])
+        ->assertOk()
+        ->assertJsonPath('allowed', false)
+        ->assertJsonPath('message', 'License not found or inactive.');
+
+    $this->assertDatabaseHas('licenses', [
+        'user_id' => $user->id,
+        'kind' => 'trial',
+        'status' => 'revoked',
+    ]);
 });
 
 it('reaches limit after three consumed jobs', function () {
