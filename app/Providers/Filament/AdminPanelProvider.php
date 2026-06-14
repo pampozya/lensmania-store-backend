@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\AffiliatePayouts;
 use App\Filament\Pages\DownloadHealth;
 use App\Filament\Pages\FraudRiskDashboard;
+use App\Filament\Pages\LicenseIssuer;
 use App\Filament\Pages\PayPalReconciliation;
 use App\Filament\Pages\SalesOverview;
 use App\Filament\Pages\SalesFunnel;
@@ -113,6 +114,7 @@ class AdminPanelProvider extends PanelProvider
                 Pages\Dashboard::class,
                 SalesOverview::class,
                 PayPalReconciliation::class,
+                LicenseIssuer::class,
                 AffiliatePayouts::class,
                 VisitAnalytics::class,
                 SalesFunnel::class,
