@@ -63,27 +63,13 @@ class PromoController extends Controller
     private function fallbackPromos(): array
     {
         return [
-            'YOUSSEF10' => [
-                'label' => "Youssef's followers",
-                'affiliate' => 'youssef',
+            'EARLYBIRD' => [
+                'label' => 'EARLYBIRD',
+                'affiliate' => null,
                 'active' => true,
                 'expiresAt' => null,
-                'discount_percent' => 10,
-                'discountPercent' => 10,
-                'price_cinecut' => null,
-                'fixedPrices' => [],
-                'link_cinecut' => null,
-                'links' => [
-                    'cinecut' => null,
-                ],
-            ],
-            'NOOR10' => [
-                'label' => "Noor's followers",
-                'affiliate' => 'noor',
-                'active' => true,
-                'expiresAt' => null,
-                'discount_percent' => 10,
-                'discountPercent' => 10,
+                'discount_percent' => null,
+                'discountPercent' => null,
                 'price_cinecut' => null,
                 'fixedPrices' => [],
                 'link_cinecut' => null,
@@ -98,7 +84,7 @@ class PromoController extends Controller
                 'expiresAt' => null,
                 'discount_percent' => null,
                 'discountPercent' => null,
-                'price_cinecut' => '15.00',
+                'price_cinecut' => 15.00,
                 'fixedPrices' => ['cinecut' => 15],
                 'link_cinecut' => null,
                 'links' => [
@@ -112,7 +98,7 @@ class PromoController extends Controller
                 'expiresAt' => null,
                 'discount_percent' => null,
                 'discountPercent' => null,
-                'price_cinecut' => '15.00',
+                'price_cinecut' => 15.00,
                 'fixedPrices' => ['cinecut' => 15],
                 'link_cinecut' => null,
                 'links' => [
