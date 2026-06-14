@@ -218,8 +218,9 @@ class AuthController extends Controller
     private function formatOrder(Order $order, \Illuminate\Support\Collection $licenses): array
     {
         $product = $order->product;
-        $license = $licenses->get($product?->id);
-        $licenseKey = $license?->license_key ?: $order->license_key;
+        $canShowLicense = $order->api_status === 'fulfilled';
+        $license = $canShowLicense ? $licenses->get($product?->id) : null;
+        $licenseKey = $license?->license_key ?: ($canShowLicense ? $order->license_key : null);
         $downloadUrl = $license ? $this->resolveDownloadUrl($order->product_slug, $order) : ($order->download_url ?: null);
         $licenseCards = [[
             'product_slug' => $order->product_slug,

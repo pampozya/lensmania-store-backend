@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Order;
+use App\Models\License;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\JwtService;
@@ -78,4 +79,38 @@ it('includes amount, status, and download link when fulfilled', function () {
         'license_key' => 'LM-CINECUT-2026-ABC123',
         'download_url' => 'https://example.com/cinecut.dmg',
     ]);
+});
+
+it('does not attach an existing paid license to a pending order', function () {
+    License::create([
+        'user_id' => $this->user->id,
+        'product_id' => $this->cinecut->id,
+        'license_key' => 'LM-CINECUT-2026-PAIDKEY-OK',
+        'kind' => 'paid',
+        'status' => 'active',
+        'expires_at' => null,
+    ]);
+
+    $pending = Order::factory()->create([
+        'user_id' => $this->user->id,
+        'product_id' => $this->cinecut->id,
+        'product_slug' => 'cinecut',
+        'amount_usd' => 35.00,
+        'status' => 'created',
+        'api_status' => 'pending',
+        'purchased_at' => now()->addMinute(),
+    ]);
+
+    $response = $this->withHeader('Authorization', 'Bearer ' . $this->userToken)
+        ->getJson('/api/auth/orders')
+        ->assertOk();
+
+    $pendingRow = collect($response->json())->firstWhere('id', $pending->id);
+
+    expect($pendingRow)->not->toBeNull();
+    expect($pendingRow['status'])->toBe('pending');
+    expect($pendingRow['license_kind'])->toBe('paid');
+    expect($pendingRow['license_key'])->toBeNull();
+    expect($pendingRow['licenses'][0]['license_key'])->toBeNull();
+    expect($pendingRow['licenses'][0]['license_status'])->toBe('pending');
 });
