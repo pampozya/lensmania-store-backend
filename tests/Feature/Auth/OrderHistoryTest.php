@@ -101,11 +101,22 @@ it('does not attach an existing paid license to a pending order', function () {
         'purchased_at' => now()->addMinute(),
     ]);
 
+    $paid = Order::factory()->create([
+        'user_id' => $this->user->id,
+        'product_id' => $this->cinecut->id,
+        'product_slug' => 'cinecut',
+        'amount_usd' => 35.00,
+        'status' => 'paid',
+        'api_status' => 'paid',
+        'purchased_at' => now()->addMinutes(2),
+    ]);
+
     $response = $this->withHeader('Authorization', 'Bearer ' . $this->userToken)
         ->getJson('/api/auth/orders')
         ->assertOk();
 
     $pendingRow = collect($response->json())->firstWhere('id', $pending->id);
+    $paidRow = collect($response->json())->firstWhere('id', $paid->id);
 
     expect($pendingRow)->not->toBeNull();
     expect($pendingRow['status'])->toBe('pending');
@@ -113,4 +124,9 @@ it('does not attach an existing paid license to a pending order', function () {
     expect($pendingRow['license_key'])->toBeNull();
     expect($pendingRow['licenses'][0]['license_key'])->toBeNull();
     expect($pendingRow['licenses'][0]['license_status'])->toBe('pending');
+    expect($paidRow)->not->toBeNull();
+    expect($paidRow['status'])->toBe('paid');
+    expect($paidRow['license_kind'])->toBe('paid');
+    expect($paidRow['license_key'])->toBe('LM-CINECUT-2026-PAIDKEY-OK');
+    expect($paidRow['licenses'][0]['license_status'])->toBe('active');
 });
