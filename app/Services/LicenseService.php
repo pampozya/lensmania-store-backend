@@ -129,7 +129,9 @@ class LicenseService
 
     public function deactivate(string $licenseKey, string $deviceId): void
     {
-        $license = License::query()->where('license_key', $licenseKey)->first();
+        $license = License::query()
+            ->whereRaw('LOWER(license_key) = ?', [strtolower($licenseKey)])
+            ->first();
 
         if (! $license) {
             return;
@@ -144,7 +146,7 @@ class LicenseService
     private function findActiveLicense(string $licenseKey, ?User $user = null): ?License
     {
         return License::query()
-            ->where('license_key', $licenseKey)
+            ->whereRaw('LOWER(license_key) = ?', [strtolower($licenseKey)])
             ->where('status', 'active')
             ->where(function ($query) {
                 $query->whereNull('expires_at')
