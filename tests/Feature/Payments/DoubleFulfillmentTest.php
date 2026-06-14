@@ -84,6 +84,14 @@ it('prevents double fulfillment when both return and webhook fire', function () 
     );
     $this->assertSame(
         1,
+        License::query()
+            ->where('user_id', $this->user->id)
+            ->where('product_id', $this->product->id)
+            ->where('kind', 'paid')
+            ->count(),
+    );
+    $this->assertSame(
+        1,
         Entitlement::query()->where('user_id', $this->user->id)->where('product_id', $this->product->id)->count(),
     );
 });

@@ -136,12 +136,13 @@ class FulfillmentService
                     'active' => true,
                 ]);
 
-                $existingLicense = License::query()
+                $existingPaidLicense = License::query()
                     ->where('user_id', $order->user_id)
                     ->where('product_id', $productId)
+                    ->where('kind', 'paid')
                     ->first();
 
-                if ($existingLicense === null) {
+                if ($existingPaidLicense === null) {
                     License::create([
                         'user_id' => $order->user_id,
                         'product_id' => $productId,
@@ -210,6 +211,7 @@ class FulfillmentService
 
                 $exists = License::where('user_id', $order->user_id)
                     ->where('product_id', $productId)
+                    ->where('kind', 'paid')
                     ->exists();
 
                 if (! $exists) {
@@ -268,6 +270,12 @@ class FulfillmentService
 
     private function buildLicenseKey(int $userId, int $productId, int $orderId): string
     {
-        return substr(hash('sha256', $userId . ':' . $productId . ':' . $orderId . ':' . config('app.key', 'fallback')), 0, 32);
+        $productSlug = Product::query()->whereKey($productId)->value('slug') ?: 'cinecut';
+
+        do {
+            $licenseKey = LicenseService::generate((string) $productSlug);
+        } while (License::query()->where('license_key', $licenseKey)->exists());
+
+        return $licenseKey;
     }
 }

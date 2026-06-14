@@ -6,6 +6,7 @@ use App\Models\License;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\LicenseService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -87,6 +88,7 @@ class GrantPurchase extends Command
             foreach ($productIds as $pid) {
                 $existing = License::where('user_id', $user->id)
                     ->where('product_id', $pid)
+                    ->where('kind', 'paid')
                     ->first();
 
                 if ($existing) {
@@ -116,6 +118,12 @@ class GrantPurchase extends Command
 
     private function buildLicenseKey(int $userId, int $productId, int $orderId): string
     {
-        return substr(hash('sha256', $userId . ':' . $productId . ':' . $orderId . ':' . config('app.key', 'fallback')), 0, 32);
+        $productSlug = Product::query()->whereKey($productId)->value('slug') ?: 'cinecut';
+
+        do {
+            $licenseKey = LicenseService::generate((string) $productSlug);
+        } while (License::query()->where('license_key', $licenseKey)->exists());
+
+        return $licenseKey;
     }
 }

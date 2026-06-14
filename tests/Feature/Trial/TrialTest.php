@@ -202,6 +202,23 @@ it('marks trial converted after paid fulfillment', function () {
 
     app(FulfillmentService::class)->fulfillStaticOrder($order);
 
+    $trialLicense = License::query()
+        ->where('user_id', $user->id)
+        ->where('product_id', $product->id)
+        ->where('kind', 'trial')
+        ->firstOrFail();
+
+    $paidLicense = License::query()
+        ->where('user_id', $user->id)
+        ->where('product_id', $product->id)
+        ->where('kind', 'paid')
+        ->firstOrFail();
+
+    expect($trialLicense->license_key)->toStartWith('LM-CINECUT-TRIAL-');
+    expect($paidLicense->license_key)->toStartWith('LM-CINECUT-');
+    expect(str_starts_with($paidLicense->license_key, 'LM-CINECUT-TRIAL-'))->toBeFalse();
+    expect($paidLicense->expires_at)->toBeNull();
+
     $this->withHeaders(bearerFor($user))
         ->getJson('/api/trial/status')
         ->assertOk()
@@ -209,4 +226,21 @@ it('marks trial converted after paid fulfillment', function () {
         ->assertJsonPath('paid_access', true)
         ->assertJsonPath('allowed', true)
         ->assertJsonPath('upgrade_required', false);
+
+    $orders = $this->withHeaders(bearerFor($user))
+        ->getJson('/api/auth/orders')
+        ->assertOk()
+        ->json();
+
+    $trial = Trial::query()->where('user_id', $user->id)->firstOrFail();
+    $paidOrder = collect($orders)->firstWhere('id', $order->id);
+    $trialOrder = collect($orders)->firstWhere('id', 'trial-' . $trial->id);
+
+    expect($paidOrder)->not->toBeNull();
+    expect($trialOrder)->not->toBeNull();
+    expect($paidOrder['license_kind'])->toBe('paid');
+    expect($paidOrder['licenses'][0]['license_kind'])->toBe('paid');
+    expect($paidOrder['license_key'])->toBe($paidLicense->license_key);
+    expect($trialOrder['license_kind'])->toBe('trial');
+    expect($trialOrder['licenses'][0]['license_kind'])->toBe('trial');
 });

@@ -161,8 +161,11 @@ class AuthController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        // Load all user licenses keyed by product_id for quick lookup
+        // Purchase cards should only attach paid licenses. Trial access is rendered
+        // separately below so a trial key never masquerades as a paid purchase.
         $licenses = \App\Models\License::where('user_id', $user->id)
+            ->where('kind', 'paid')
+            ->latest('created_at')
             ->get()
             ->keyBy('product_id');
 
