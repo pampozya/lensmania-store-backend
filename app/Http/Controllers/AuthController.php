@@ -26,6 +26,7 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'max:30'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ], [
             'email.unique' => 'Email already exists',
@@ -35,6 +36,7 @@ class AuthController extends Controller
         $user = User::create([
             'name' => trim($data['name']),
             'email' => strtolower(trim($data['email'])),
+            'phone' => isset($data['phone']) ? (trim($data['phone']) ?: null) : null,
             'password' => $data['password'],
         ]);
 
