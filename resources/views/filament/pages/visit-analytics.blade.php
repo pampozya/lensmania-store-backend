@@ -1,4 +1,8 @@
 <x-filament-panels::page>
+    @if ($this->lastUpdated)
+        <p class="text-sm text-gray-500 dark:text-gray-400">Last updated: {{ $this->lastUpdated }}</p>
+    @endif
+
     <div class="grid gap-6 lg:grid-cols-2">
         <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
             <h2 class="text-base font-semibold text-gray-950 dark:text-white">Top locations</h2>
@@ -13,7 +17,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-white/10">
-                        @forelse ($this->getLocations() as $row)
+                        @forelse ($this->locations as $row)
                             <tr>
                                 <td class="py-2 text-gray-950 dark:text-white">{{ $row['country'] }}</td>
                                 <td class="py-2 text-gray-700 dark:text-gray-300">{{ $row['city'] }}</td>
@@ -41,7 +45,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-white/10">
-                        @forelse ($this->getDevices() as $row)
+                        @forelse ($this->devices as $row)
                             <tr>
                                 <td class="py-2 text-gray-950 dark:text-white">{{ $row['device'] }}</td>
                                 <td class="py-2 text-gray-700 dark:text-gray-300">{{ $row['os'] }}</td>
@@ -72,7 +76,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-white/10">
-                    @forelse ($this->getRecentVisits() as $row)
+                    @forelse ($this->recentVisits as $row)
                         <tr>
                             <td class="py-2 text-gray-700 dark:text-gray-300">{{ $row['when'] }}</td>
                             <td class="py-2 text-gray-950 dark:text-white">{{ $row['path'] }}</td>

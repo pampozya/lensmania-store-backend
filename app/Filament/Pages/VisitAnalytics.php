@@ -3,6 +3,8 @@
 namespace App\Filament\Pages;
 
 use App\Models\SiteVisit;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 
 final class VisitAnalytics extends Page
@@ -19,7 +21,52 @@ final class VisitAnalytics extends Page
 
     protected static string $view = 'filament.pages.visit-analytics';
 
-    public function getLocations(): array
+    /** @var array<int, array<string, mixed>> */
+    public array $locations = [];
+
+    /** @var array<int, array<string, mixed>> */
+    public array $devices = [];
+
+    /** @var array<int, array<string, mixed>> */
+    public array $recentVisits = [];
+
+    public ?string $lastUpdated = null;
+
+    public function mount(): void
+    {
+        $this->loadData();
+    }
+
+    public function loadData(): void
+    {
+        $this->locations = $this->fetchLocations();
+        $this->devices = $this->fetchDevices();
+        $this->recentVisits = $this->fetchRecentVisits();
+        $this->lastUpdated = now()->format('M j, Y H:i:s');
+    }
+
+    public function refresh(): void
+    {
+        $this->loadData();
+
+        Notification::make()
+            ->title('Analytics refreshed')
+            ->success()
+            ->send();
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('refresh')
+                ->label('Refresh')
+                ->icon('heroicon-o-arrow-path')
+                ->action(fn () => $this->refresh()),
+        ];
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    protected function fetchLocations(): array
     {
         return SiteVisit::query()
             ->selectRaw("coalesce(nullif(country, ''), 'Unknown') as country, coalesce(nullif(city, ''), 'Unknown') as city, count(*) as visits, count(distinct visitor_hash) as visitors")
@@ -36,7 +83,8 @@ final class VisitAnalytics extends Page
             ->all();
     }
 
-    public function getDevices(): array
+    /** @return array<int, array<string, mixed>> */
+    protected function fetchDevices(): array
     {
         return SiteVisit::query()
             ->selectRaw("coalesce(nullif(device_type, ''), 'unknown') as device, coalesce(nullif(os, ''), 'unknown') as os, coalesce(nullif(browser, ''), 'unknown') as browser, count(*) as visits")
@@ -53,7 +101,8 @@ final class VisitAnalytics extends Page
             ->all();
     }
 
-    public function getRecentVisits(): array
+    /** @return array<int, array<string, mixed>> */
+    protected function fetchRecentVisits(): array
     {
         return SiteVisit::query()
             ->latest('created_at')
