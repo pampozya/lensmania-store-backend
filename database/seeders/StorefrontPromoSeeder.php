@@ -52,7 +52,7 @@ class StorefrontPromoSeeder extends Seeder
                 'label' => 'EARLYBIRD',
                 'affiliate' => null,
                 'discount_percent' => null,
-                'price_cinecut' => null,
+                'price_cinecut' => 15.00,
                 'link_cinecut' => null,
                 'active' => true,
                 'expires_at' => null,
