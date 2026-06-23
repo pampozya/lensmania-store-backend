@@ -105,6 +105,20 @@ class PromoController extends Controller
                     'cinecut' => null,
                 ],
             ],
+            'ALAAVIP' => [
+                'label' => 'Alaa VIP',
+                'affiliate' => 'alaa',
+                'active' => true,
+                'expiresAt' => null,
+                'discount_percent' => null,
+                'discountPercent' => null,
+                'price_cinecut' => 15.00,
+                'fixedPrices' => ['cinecut' => 15],
+                'link_cinecut' => null,
+                'links' => [
+                    'cinecut' => null,
+                ],
+            ],
         ];
     }
 }
