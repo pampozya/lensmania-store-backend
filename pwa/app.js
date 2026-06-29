@@ -6,6 +6,19 @@ const WORKER_TOKEN = ''; // leave empty if you skipped the optional token
 
 // ── State ─────────────────────────────────────────────────────────
 const history = []; // { role: 'user'|'assistant', content: string }
+let currentModel = 'gemma';
+
+const MODEL_LABELS = {
+  gemma:    'Gemma 4',
+  llama:    'Llama 3.3',
+  deepseek: 'DeepSeek V4',
+};
+
+const MODEL_DESCRIPTIONS = {
+  gemma:    'Powered by Google Gemma 4 — ask anything.',
+  llama:    'Powered by Llama 3.3 via Cloudflare AI — ask anything.',
+  deepseek: 'Powered by DeepSeek V4 — ask anything.',
+};
 
 // ── DOM refs ──────────────────────────────────────────────────────
 const messagesEl  = document.getElementById('messages');
@@ -13,6 +26,8 @@ const emptyState  = document.getElementById('empty-state');
 const textarea    = document.getElementById('input');
 const sendBtn     = document.getElementById('send-btn');
 const clearBtn    = document.getElementById('clear-btn');
+const badge       = document.querySelector('.badge');
+const modelBtns   = document.querySelectorAll('.model-btn');
 
 // ── Rendering ─────────────────────────────────────────────────────
 function appendMessage(role, content, isTyping = false) {
@@ -57,7 +72,7 @@ async function send() {
     const res = await fetch(`${WORKER_URL}/chat`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ messages: history }),
+      body: JSON.stringify({ messages: history, model: currentModel }),
     });
 
     if (!res.ok) {
@@ -91,7 +106,7 @@ function clearChat() {
     <div id="empty-state" class="empty-state">
       <div class="empty-icon">✦</div>
       <h2>Lensmania AI</h2>
-      <p>Powered by Google Gemma 4 &mdash; ask anything.</p>
+      <p>${MODEL_DESCRIPTIONS[currentModel]}</p>
     </div>`;
 }
 
@@ -113,6 +128,15 @@ textarea.addEventListener('keydown', e => {
 
 sendBtn.addEventListener('click', send);
 clearBtn.addEventListener('click', clearChat);
+
+// ── Model selector ────────────────────────────────────────────────
+modelBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentModel = btn.dataset.model;
+    modelBtns.forEach(b => b.classList.toggle('active', b === btn));
+    badge.textContent = MODEL_LABELS[currentModel];
+  });
+});
 
 // ── Service worker ────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {

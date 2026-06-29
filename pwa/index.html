@@ -101,6 +101,51 @@
       letter-spacing: .3px;
     }
 
+    /* ── Model selector ─────────────────────────────────────── */
+    .model-bar {
+      display: flex;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .model-bar::-webkit-scrollbar { display: none; }
+
+    .model-btn {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 13px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: inherit;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+
+    .model-btn:hover:not(.active) {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .model-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .model-btn.paid::after {
+      content: ' ·$';
+      opacity: .6;
+      font-size: 10px;
+    }
+
     /* ── Messages ────────────────────────────────────────────── */
     #messages {
       flex: 1;
@@ -319,6 +364,12 @@
       <h1>Lensmania AI</h1>
       <span class="badge">Gemma 4</span>
     </header>
+
+    <div class="model-bar">
+      <button class="model-btn active" data-model="gemma">Gemma 4</button>
+      <button class="model-btn" data-model="llama">Llama 3.3</button>
+      <button class="model-btn paid" data-model="deepseek">DeepSeek V4</button>
+    </div>
 
     <div id="messages">
       <div id="empty-state" class="empty-state">
