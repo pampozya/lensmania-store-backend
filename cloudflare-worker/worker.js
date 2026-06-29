@@ -55,11 +55,21 @@ export default {
       parts: [{ text: String(m.content) }],
     }));
 
-    const googleRes = await fetch(`${GOOGLE_AI_URL}?key=${env.GOOGLE_AI_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents }),
+    const payload = JSON.stringify({
+      system_instruction: { parts: [{ text: 'You are a helpful AI assistant for Lensmania, a camera store in Dubai. Answer clearly and concisely without showing your reasoning or thought process.' }] },
+      contents,
     });
+    let googleRes, attempts = 0;
+    while (attempts < 3) {
+      if (attempts > 0) await new Promise(r => setTimeout(r, attempts * 1500));
+      googleRes = await fetch(`${GOOGLE_AI_URL}?key=${env.GOOGLE_AI_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+      });
+      if (googleRes.status !== 503 && googleRes.status !== 500) break;
+      attempts++;
+    }
 
     if (!googleRes.ok) {
       const errText = await googleRes.text();
@@ -67,7 +77,8 @@ export default {
     }
 
     const data = await googleRes.json();
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    const parts = data.candidates?.[0]?.content?.parts ?? [];
+    const reply = parts.filter(p => !p.thought).map(p => p.text ?? '').join('').trim();
 
     return json({ reply });
   },
