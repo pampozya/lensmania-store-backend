@@ -1,0 +1,8 @@
+name = "gemma-worker"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+
+# Secrets — never put real values here.
+# Set them once via CLI:
+#   wrangler secret put GOOGLE_AI_KEY
+#   wrangler secret put WORKER_TOKEN   (optional, leave unset to skip auth)
