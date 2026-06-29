@@ -2,27 +2,21 @@
  * Cloudflare Worker — AI gateway
  *
  * Supported models (pass as "model" field in POST /chat body):
- *   "gemma"     — Gemma 4 27B via Google AI Studio   (free, default)
- *   "llama"     — Llama 3.3 70B via Cloudflare AI  (free, no key needed)
- *   "deepseek"  — DeepSeek V4 via DeepSeek platform (paid)
+ *   "gemma"  — Gemma 4 27B via Google AI Studio  (free, default)
+ *   "llama"  — Llama 3.3 70B via Cloudflare AI  (free, no key needed)
  *
  * Secrets (wrangler secret put <NAME>):
- *   GOOGLE_AI_KEY    — Google AI Studio key
- *   DEEPSEEK_API_KEY — DeepSeek platform key
- *   WORKER_TOKEN     — (optional) bearer token clients must send
+ *   GOOGLE_AI_KEY — Google AI Studio key
+ *   WORKER_TOKEN  — (optional) bearer token clients must send
  */
 
 const MODELS = {
-  gemma:    { label: 'Gemma 4 27B (Google AI Studio)' },
-  llama:    { label: 'Llama 3.3 70B (Cloudflare AI)' },
-  deepseek: { label: 'DeepSeek V4' },
+  gemma: { label: 'Gemma 4 27B (Google AI Studio)' },
+  llama: { label: 'Llama 3.3 70B (Cloudflare AI)' },
 };
 
 const GEMMA_MODEL    = 'gemma-4-27b-it';
 const GEMMA_URL      = `https://generativelanguage.googleapis.com/v1beta/models/${GEMMA_MODEL}:generateContent`;
-
-const DEEPSEEK_MODEL = 'deepseek-v4';
-const DEEPSEEK_URL   = 'https://api.deepseek.com/v1/chat/completions';
 
 const CF_LLAMA_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 
@@ -67,16 +61,15 @@ export default {
       return new Response('Bad Request: messages[] required', { status: 400, headers: CORS });
     }
 
-    const model = body.model ?? 'gemma';
+    const model = body.model ?? 'llama';
 
     if (!MODELS[model]) {
       return json({ error: `Unknown model "${model}". Valid: ${Object.keys(MODELS).join(', ')}` }, 400);
     }
 
     switch (model) {
-      case 'gemma':    return callGemma(messages, env);
-      case 'llama':    return callCloudflareAI(messages, env);
-      case 'deepseek': return callDeepSeek(messages, env);
+      case 'gemma': return callGemma(messages, env);
+      case 'llama': return callCloudflareAI(messages, env);
     }
   },
 };
@@ -110,38 +103,6 @@ async function callCloudflareAI(messages, env) {
   const response = await env.AI.run(CF_LLAMA_MODEL, { messages });
   const reply = response.response ?? '';
   return json({ reply, model: 'llama' });
-}
-
-// ── DeepSeek V4 ───────────────────────────────────────────────────────────────
-
-async function callDeepSeek(messages, env) {
-  if (!env.DEEPSEEK_API_KEY) {
-    return json({ error: 'DEEPSEEK_API_KEY secret not configured' }, 500);
-  }
-
-  const res = await fetchWithRetry(
-    DEEPSEEK_URL,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${env.DEEPSEEK_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: DEEPSEEK_MODEL,
-        messages: messages.map(m => ({ role: m.role, content: String(m.content) })),
-      }),
-    }
-  );
-
-  if (!res.ok) {
-    const errText = await res.text();
-    return json({ error: `DeepSeek error ${res.status}`, detail: errText }, res.status);
-  }
-
-  const data = await res.json();
-  const reply = data.choices?.[0]?.message?.content ?? '';
-  return json({ reply, model: 'deepseek' });
 }
 
 // ── Shared helpers ────────────────────────────────────────────────────────────

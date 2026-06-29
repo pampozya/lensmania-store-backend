@@ -6,18 +6,16 @@ const WORKER_TOKEN = ''; // leave empty if you skipped the optional token
 
 // ── State ─────────────────────────────────────────────────────────
 const history = []; // { role: 'user'|'assistant', content: string }
-let currentModel = 'gemma';
+let currentModel = 'llama';
 
 const MODEL_LABELS = {
-  gemma:    'Gemma 4',
-  llama:    'Llama 3.3',
-  deepseek: 'DeepSeek V4',
+  gemma: 'Gemma 4',
+  llama: 'Llama 3.3',
 };
 
 const MODEL_DESCRIPTIONS = {
-  gemma:    'Powered by Google Gemma 4 — ask anything.',
-  llama:    'Powered by Llama 3.3 via Cloudflare AI — ask anything.',
-  deepseek: 'Powered by DeepSeek V4 — ask anything.',
+  gemma: 'Powered by Google Gemma 4 — ask anything.',
+  llama: 'Powered by Llama 3.3 via Cloudflare AI — ask anything.',
 };
 
 // ── DOM refs ──────────────────────────────────────────────────────

@@ -8,5 +8,4 @@ binding = "AI"
 # Secrets — never put real values here.
 # Set them once via CLI:
 #   wrangler secret put GOOGLE_AI_KEY
-#   wrangler secret put DEEPSEEK_API_KEY
 #   wrangler secret put WORKER_TOKEN   (optional, leave unset to skip auth)

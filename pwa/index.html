@@ -140,12 +140,6 @@
       border-color: var(--accent);
     }
 
-    .model-btn.paid::after {
-      content: ' ·$';
-      opacity: .6;
-      font-size: 10px;
-    }
-
     /* ── Messages ────────────────────────────────────────────── */
     #messages {
       flex: 1;
@@ -362,20 +356,19 @@
     <header>
       <div class="logo">✦</div>
       <h1>Lensmania AI</h1>
-      <span class="badge">Gemma 4</span>
+      <span class="badge">Llama 3.3</span>
     </header>
 
     <div class="model-bar">
-      <button class="model-btn active" data-model="gemma">Gemma 4</button>
-      <button class="model-btn" data-model="llama">Llama 3.3</button>
-      <button class="model-btn paid" data-model="deepseek">DeepSeek V4</button>
+      <button class="model-btn" data-model="gemma">Gemma 4</button>
+      <button class="model-btn active" data-model="llama">Llama 3.3</button>
     </div>
 
     <div id="messages">
       <div id="empty-state" class="empty-state">
         <div class="empty-icon">✦</div>
         <h2>Lensmania AI</h2>
-        <p>Powered by Google Gemma 4 &mdash; ask anything.</p>
+        <p>Powered by Llama 3.3 via Cloudflare AI &mdash; ask anything.</p>
       </div>
     </div>
 
