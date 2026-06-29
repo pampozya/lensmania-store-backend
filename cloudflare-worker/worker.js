@@ -1,19 +1,44 @@
 /**
- * Cloudflare Worker — AI gateway (Gemma 4 + DeepSeek V4)
+ * Cloudflare Worker — AI gateway
  *
- * Secrets (set via wrangler CLI, never in code):
- *   GOOGLE_AI_KEY   — Google AI Studio API key
- *   DEEPSEEK_API_KEY — DeepSeek platform API key
- *   WORKER_TOKEN    — (optional) bearer token clients must send
+ * Supported models (pass as "model" field in POST /chat body):
+ *   "gemma"      — Gemma 4 27B via Google AI Studio      (free, default)
+ *   "llama"      — Llama 3.3 70B via Cloudflare AI       (free, no key needed)
+ *   "groq"       — Llama 3.3 70B via Groq                (free, fast)
+ *   "groq-fast"  — Llama 3.1 8B via Groq                 (free, fastest)
+ *   "reasoning"  — DeepSeek R1 Distill 70B via Groq      (free, step-by-step)
+ *   "deepseek"   — DeepSeek V4 via DeepSeek platform     (paid)
  *
- * POST /chat  body: { messages: [{role, content}], model?: "gemma"|"deepseek" }
+ * Secrets (wrangler secret put <NAME>):
+ *   GOOGLE_AI_KEY    — Google AI Studio key
+ *   GROQ_API_KEY     — Groq console.groq.com key
+ *   DEEPSEEK_API_KEY — DeepSeek platform key
+ *   WORKER_TOKEN     — (optional) bearer token clients must send
  */
 
-const GEMMA_MODEL = 'gemma-4-27b-it';
-const GEMMA_URL   = `https://generativelanguage.googleapis.com/v1beta/models/${GEMMA_MODEL}:generateContent`;
+const MODELS = {
+  gemma:     { label: 'Gemma 4 27B (Google AI Studio)' },
+  llama:     { label: 'Llama 3.3 70B (Cloudflare AI)' },
+  groq:      { label: 'Llama 3.3 70B (Groq)' },
+  'groq-fast': { label: 'Llama 3.1 8B (Groq)' },
+  reasoning: { label: 'DeepSeek R1 Distill 70B (Groq)' },
+  deepseek:  { label: 'DeepSeek V4' },
+};
+
+const GEMMA_MODEL    = 'gemma-4-27b-it';
+const GEMMA_URL      = `https://generativelanguage.googleapis.com/v1beta/models/${GEMMA_MODEL}:generateContent`;
 
 const DEEPSEEK_MODEL = 'deepseek-v4';
 const DEEPSEEK_URL   = 'https://api.deepseek.com/v1/chat/completions';
+
+const GROQ_URL       = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODELS    = {
+  'groq':      'llama-3.3-70b-versatile',
+  'groq-fast': 'llama-3.1-8b-instant',
+  'reasoning': 'deepseek-r1-distill-llama-70b',
+};
+
+const CF_LLAMA_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -30,7 +55,7 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === '/health' && request.method === 'GET') {
-      return json({ ok: true, models: { gemma: GEMMA_MODEL, deepseek: DEEPSEEK_MODEL } });
+      return json({ ok: true, models: MODELS });
     }
 
     if (url.pathname !== '/chat' || request.method !== 'POST') {
@@ -58,12 +83,20 @@ export default {
 
     const model = body.model ?? 'gemma';
 
-    if (model === 'deepseek') {
-      return callDeepSeek(messages, env);
+    if (!MODELS[model]) {
+      return json({ error: `Unknown model "${model}". Valid: ${Object.keys(MODELS).join(', ')}` }, 400);
     }
-    return callGemma(messages, env);
+
+    switch (model) {
+      case 'gemma':     return callGemma(messages, env);
+      case 'llama':     return callCloudflareAI(messages, env);
+      case 'deepseek':  return callDeepSeek(messages, env);
+      default:          return callGroq(model, messages, env);
+    }
   },
 };
+
+// ── Gemma 4 via Google AI Studio ─────────────────────────────────────────────
 
 async function callGemma(messages, env) {
   const contents = messages.map(m => ({
@@ -85,6 +118,48 @@ async function callGemma(messages, env) {
   const reply = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
   return json({ reply, model: 'gemma' });
 }
+
+// ── Llama 3.3 70B via Cloudflare Workers AI (no key needed) ──────────────────
+
+async function callCloudflareAI(messages, env) {
+  const response = await env.AI.run(CF_LLAMA_MODEL, { messages });
+  const reply = response.response ?? '';
+  return json({ reply, model: 'llama' });
+}
+
+// ── Groq (Llama 3.3 70B / Llama 3.1 8B / DeepSeek R1 Distill) ───────────────
+
+async function callGroq(model, messages, env) {
+  if (!env.GROQ_API_KEY) {
+    return json({ error: 'GROQ_API_KEY secret not configured' }, 500);
+  }
+
+  const res = await fetchWithRetry(
+    GROQ_URL,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: GROQ_MODELS[model],
+        messages: messages.map(m => ({ role: m.role, content: String(m.content) })),
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    const errText = await res.text();
+    return json({ error: `Groq error ${res.status}`, detail: errText }, res.status);
+  }
+
+  const data = await res.json();
+  const reply = data.choices?.[0]?.message?.content ?? '';
+  return json({ reply, model });
+}
+
+// ── DeepSeek V4 ───────────────────────────────────────────────────────────────
 
 async function callDeepSeek(messages, env) {
   if (!env.DEEPSEEK_API_KEY) {
@@ -115,6 +190,8 @@ async function callDeepSeek(messages, env) {
   const reply = data.choices?.[0]?.message?.content ?? '';
   return json({ reply, model: 'deepseek' });
 }
+
+// ── Shared helpers ────────────────────────────────────────────────────────────
 
 async function fetchWithRetry(url, init, retries = 3) {
   let delay = 1000;
