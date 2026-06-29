@@ -1,7 +1,7 @@
 // ── Configuration ────────────────────────────────────────────────
 // Replace WORKER_URL with your deployed Cloudflare Worker URL.
 // Set WORKER_TOKEN only if you set the WORKER_TOKEN secret in wrangler.
-const WORKER_URL   = 'https://gemma-worker.YOUR_SUBDOMAIN.workers.dev';
+const WORKER_URL   = 'https://gemma-worker.pampozya.workers.dev';
 const WORKER_TOKEN = ''; // leave empty if you skipped the optional token
 
 // ── State ─────────────────────────────────────────────────────────
