@@ -6,7 +6,7 @@
  *   WORKER_TOKEN    — (optional) bearer token clients must send
  */
 
-const GEMMA_MODEL = 'gemma-4-27b-it';
+const GEMMA_MODEL = 'gemma-4-31b-it';
 const GOOGLE_AI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMMA_MODEL}:generateContent`;
 
 const CORS = {
