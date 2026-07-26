@@ -326,6 +326,70 @@ capital. Each phase has an exit criterion; don't advance without it.
 
 ---
 
+## Appendix A — The Profitability Scaling Ladder
+
+Profit = **edge per trade × trade count × size per trade**. The levers, ranked by
+return-per-unit-of-added-risk. Climb them in order; skipping rungs is how the system dies.
+
+1. **Prove the edge, then scale risk per trade.** 0.75% → 1.25% risk/trade is +67% profit with
+   zero new trades, zero new fees, zero signal dilution. Earned via the Phase 6 promotion
+   criteria (≥30 live trades, costs ≤1.5× model, no reconciliation mismatches) — never assumed.
+2. **Compounding.** Sizing is computed from *current* equity, so gains scale future gains
+   automatically. This lever is broken only by impatience (withdrawing early, or overriding
+   sizing after a losing week).
+3. **More real trades, same gates:**
+   - Universe top 15 → top 30–40 (keep liquidity + listing-age filters): ~2× event rate.
+   - Enable the validated short side: up to ~2× again on eligible events.
+   - Add a second, *uncorrelated* setup (e.g., funding-extreme mean reversion) rather than
+     diluting the first. Two independent edges at 2–3 trades/day beat one edge stretched to 10.
+   Realistic ceiling inside the moat: ~4–6 quality trades/day in hot regimes, near zero in dead
+   ones. Frequency is an **output** of edge supply, never a quota.
+4. **Cut costs on existing trades:** pay fees in BNB (−10%), prefer resting maker limits
+   (~2 bps) over taker (~5 bps) where fill probability allows.
+
+**Anti-pattern, documented so it stays rejected:** forcing 10+ trades/day. The extra trades can
+only come from loosened gates or lower timeframes; both shrink per-trade edge faster than count
+grows, quintuple fee outlay, and stack correlated BTC-beta risk. In expectation it is more
+volume for equal-or-less profit at materially higher risk of ruin.
+
+## Appendix B — Infrastructure Budget & Small-Account Reality
+
+### Hardware: what is actually required
+
+- **No GPU. Ever.** The LLM is consumed via API; nothing is trained locally. Indicators on 15–40
+  symbols of 4H bars are trivial arithmetic.
+- **Development + backtesting:** any laptop. The full multi-year backtest over the universe runs
+  in seconds-to-minutes on one CPU core with pandas/numpy.
+- **Production Reflexes:** one small always-on Linux box — a $5–7/mo VPS (1 vCPU / 1 GB), an
+  Oracle Cloud free-tier instance ($0), or a Raspberry Pi / old PC at home. Requirements are
+  uptime and a stable IP (for the API-key whitelist), not speed. Latency is irrelevant at 4H.
+- **Running cost budget:** VPS $0–7/mo + Binance data $0 (public API) + LLM API ~$1–5/mo +
+  news/unlock feeds $0 (RSS/public) ≈ **$1–12/month total.**
+
+### The $50–$100 account, honestly
+
+The system's math at spec on $100 equity: risk/trade = $0.75, and at a +0.3R expectancy a good
+trade *expects* ~$0.23. Even a strong year is measured in tens of dollars — while exchange
+**minimum notional** rules ($5 on most USDT perps, ~$100 on BTCUSDT) make correct sizing coarse
+or impossible on some symbols, and sizing granularity forces rounding that distorts risk.
+
+Therefore, at this capital level the objective is redefined: **the deposit is tuition, not
+seed capital.** What $50–100 live buys — and it's genuinely valuable — is proof that the whole
+pipeline works with real money: real fills, real funding debits, real reconciliation, real
+operator discipline. The performance record it produces is what justifies depositing more later.
+
+Rules for the micro account phase:
+- Trade only symbols whose min-notional allows correct sizing at this equity (mostly mid-price
+  alts; BTCUSDT is excluded by its own minimums — that's fine).
+- Run testnet and the backtest phases exactly as specced first; the micro-live phase replaces
+  nothing, it *follows* Phase 5.
+- Success metric = 30+ trades with slippage/fees/funding within model and zero operational
+  incidents. P&L in dollars is explicitly **not** the metric at this size.
+- Never "make it worth it" by raising leverage. 10x on $100 is not a strategy, it's a countdown.
+  The leverage cap does not scale down with account size.
+
+---
+
 *Engineering blueprint, not investment advice. Leveraged perpetual futures can lose more than
 the margin allocated to a position; past patterns (including funding-conditioned momentum) may
 not persist.*
