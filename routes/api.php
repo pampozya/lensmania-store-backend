@@ -9,11 +9,15 @@ use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\License\LicenseController;
 use App\Http\Controllers\PromoController;
 use App\Http\Controllers\TrialController;
+use App\Http\Controllers\VisaLookupController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->get('/health', function () {
     return response()->json(['ok' => true]);
 });
+
+Route::get('/visa/lookup', [VisaLookupController::class, 'lookup'])
+    ->middleware('throttle:30,1');
 
 Route::get('/promos', [PromoController::class, 'index']);
 
