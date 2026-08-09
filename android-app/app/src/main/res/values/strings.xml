@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CarDiag</string>
+
+    <!-- MainActivity -->
+    <string name="hint_pair_first">Pair your ThinkDiag 2 / OBD adapter in Android Bluetooth settings first, then plug it into the OBD port and turn ignition on.</string>
+    <string name="open_bluetooth_settings">Open Bluetooth settings</string>
+    <string name="paired_devices_title">Paired devices</string>
+    <string name="no_paired_devices">No paired devices found. Pair your OBD adapter in Bluetooth settings, then come back here and pull to refresh.</string>
+    <string name="permission_rationale">Bluetooth (and on older Android, Location) permission is required to see paired devices and connect to your OBD adapter.</string>
+    <string name="grant_permissions">Grant permissions</string>
+    <string name="connecting_title">Connecting…</string>
+    <string name="connecting_message">Talking to %1$s…</string>
+    <string name="init_failed_title">Couldn\'t establish an ELM327 session</string>
+    <string name="init_failed_thinkdiag_note">No ELM327 response. ThinkDiag 2 uses a proprietary protocol; if this keeps failing use any ELM327-compatible adapter, or probe manually in the Terminal.</string>
+    <string name="open_terminal_anyway">Open Terminal anyway</string>
+    <string name="cancel">Cancel</string>
+    <string name="retry">Retry</string>
+    <string name="close">Close</string>
+
+    <!-- DiagnosticsActivity -->
+    <string name="tab_live_data">Live Data</string>
+    <string name="tab_trouble_codes">Trouble Codes</string>
+    <string name="tab_terminal">Terminal</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_error">Error: %1$s</string>
+
+    <!-- Live data -->
+    <string name="label_rpm">RPM</string>
+    <string name="label_speed">Speed (km/h)</string>
+    <string name="label_coolant">Coolant °C</string>
+    <string name="label_intake">Intake °C</string>
+    <string name="label_throttle">Throttle %</string>
+    <string name="label_engine_load">Engine load %</string>
+    <string name="label_battery">Battery V</string>
+    <string name="label_vin">VIN</string>
+    <string name="value_placeholder">—</string>
+    <string name="live_data_disconnected">Disconnected — reconnect from the device list to resume live data.</string>
+
+    <!-- DTCs -->
+    <string name="read_codes">Read codes</string>
+    <string name="clear_codes">Clear codes</string>
+    <string name="clear_codes_confirm_title">Clear trouble codes?</string>
+    <string name="clear_codes_confirm_message">This resets readiness monitors and may be blocked by the car\'s secure gateway. Continue?</string>
+    <string name="section_stored">Stored codes</string>
+    <string name="section_pending">Pending codes</string>
+    <string name="no_dtcs">No trouble codes 🎉</string>
+    <string name="dtcs_cleared">Codes cleared</string>
+    <string name="dtcs_clear_failed">Clear failed — adapter did not confirm</string>
+
+    <!-- Terminal -->
+    <string name="terminal_hint">Enter AT or OBD command</string>
+    <string name="send">Send</string>
+    <string name="terminal_not_initialized">ELM327 init failed — raw passthrough mode. You can still send commands directly.</string>
+</resources>

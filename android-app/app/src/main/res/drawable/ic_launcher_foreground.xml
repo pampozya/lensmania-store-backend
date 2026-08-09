@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Simple car silhouette -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,60 L34,46 C35,42 39,39 43,39 L65,39 C69,39 73,42 74,46 L78,60 L78,74 C78,76 76,78 74,78 L72,78 C70,78 68,76 68,74 L68,71 L40,71 L40,74 C40,76 38,78 36,78 L34,78 C32,78 30,76 30,74 Z" />
+
+    <path
+        android:fillColor="#0D47A1"
+        android:pathData="M37,46 L40,58 L68,58 L71,46 C70,44 68,43 66,43 L42,43 C40,43 38,44 37,46 Z" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,65 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M68,65 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+
+    <!-- Wrench accent -->
+    <path
+        android:fillColor="#00C853"
+        android:pathData="M78,30 C81,27 86,27 89,30 C91,32 92,35 91,38 L83,46 L79,42 L87,34 C86,34 84,34 83,33 C81,32 80,30 80,28 L78,30 Z" />
+</vector>
