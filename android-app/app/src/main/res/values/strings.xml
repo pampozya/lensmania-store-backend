@@ -21,6 +21,7 @@
     <!-- DiagnosticsActivity -->
     <string name="tab_live_data">Live Data</string>
     <string name="tab_trouble_codes">Trouble Codes</string>
+    <string name="tab_modules">Modules</string>
     <string name="tab_terminal">Terminal</string>
     <string name="action_disconnect">Disconnect</string>
     <string name="status_connected">Connected</string>
@@ -50,6 +51,16 @@
     <string name="no_dtcs">No trouble codes 🎉</string>
     <string name="dtcs_cleared">Codes cleared</string>
     <string name="dtcs_clear_failed">Clear failed — adapter did not confirm</string>
+
+    <!-- Modules -->
+    <string name="modules_hint">Scans each ECU by its CAN address using standard UDS requests. Modules the car\'s secure gateway forwards show as ONLINE; ones it locks show as BLOCKED. This does not bypass the gateway — it reports what actually answers.</string>
+    <string name="scan_all_modules">Scan all modules</string>
+    <string name="modules_scanning">Scanning %1$s…</string>
+    <string name="modules_scan_done">Scan complete</string>
+    <string name="modules_reading_dtcs">Reading DTCs from %1$s…</string>
+    <string name="modules_no_codes">No stored codes in this module</string>
+    <string name="modules_not_connected">Not connected</string>
+    <string name="modules_tap_offline">This module did not respond — nothing to read</string>
 
     <!-- Terminal -->
     <string name="terminal_hint">Enter AT or OBD command</string>

@@ -6,8 +6,8 @@ any classic-Bluetooth ELM327-compatible OBD-II adapter and any OBD-II compliant 
 
 It reads live sensor data (RPM, speed, coolant/intake temperature, throttle,
 engine load, battery voltage), the VIN, and stored/pending diagnostic trouble
-codes (DTCs), and includes a raw terminal for sending AT/OBD commands directly
-to the adapter.
+codes (DTCs), scans individual ECU modules across the CAN bus, and includes a
+raw terminal for sending AT/OBD commands directly to the adapter.
 
 ## Getting the APK
 
@@ -57,6 +57,32 @@ ELM327 AT-command set. That means:
 - Full ThinkDiag 2 module-level diagnostics (ABS, airbag, TPMS, etc.) require
   Thinkcar's own app; CarDiag only speaks generic OBD-II.
 
+## Modules tab (multi-ECU scan)
+
+The **Modules** tab reaches beyond the standard powertrain broadcast (`7DF`) and
+addresses each ECU directly — the same technique FORScan and other pro tools
+use. For every candidate CAN address (engine `7E0`, transmission `7E1`, ABS
+`760`, airbag/SRS `780`, BCM `740`, cluster `720`, EPS `730`, HVAC `7A0`,
+infotainment `7B0`, TPMS `750`, PDC `770`, gateway `710`, …) it:
+
+1. Sets the ELM327 transmit header (`ATSH`) and receive filter (`ATCRA`).
+2. Sends standards-compliant UDS (ISO 14229) requests — `1003`
+   (DiagnosticSessionControl), `3E00` (TesterPresent).
+3. Classifies the reply: **ONLINE** (a UDS positive `0x50`/`0x7E` or even a
+   negative `0x7F` response — both prove an ECU is there), **BLOCKED** (the
+   gateway returned `NO DATA`/`CAN ERROR`/timeout), or **NO RESP**.
+
+Tapping an ONLINE module issues a UDS `1902FF` (ReadDTCInformation) and shows
+that module's stored codes.
+
+**This is not a gateway bypass.** Every frame is a well-formed diagnostic
+request; the car's secure gateway independently decides whether to forward each
+one. Modules the MG ZS gateway locks behind OEM authentication will simply read
+as BLOCKED — that's the expected, honest result. The app does **not** attempt
+UDS SecurityAccess (`0x27`) seed/key cracking and ships no OEM keys. For genuine
+access to locked modules you still need Thinkcar's own app with the ThinkDiag 2,
+or a dealer-level tool.
+
 ## Secure gateway caveat (2026 MG ZS)
 
 Modern MG/SAIC vehicles (including the 2026 MG ZS) have a secure gateway
@@ -98,8 +124,11 @@ Requirements: JDK 17, Android SDK with `compileSdk`/`targetSdk` 35 installed
   session, and connection state (`StateFlow<ConnState>`).
 - `obd/DtcDecoder.kt` — decodes raw DTC payload bytes into `P0XXX`/`C0XXX`/
   `B0XXX`/`U0XXX` codes and human-readable descriptions.
+- `obd/ModuleScanner.kt` — direct per-ECU UDS addressing (`ATSH`/`ATCRA` +
+  ISO 14229 services) for the multi-module scan.
 - `MainActivity` — permissions, paired device list, connect flow.
-- `DiagnosticsActivity` — tabbed Live Data / Trouble Codes / Terminal UI.
+- `DiagnosticsActivity` — tabbed Live Data / Trouble Codes / Modules /
+  Terminal UI.
 
 No Compose — classic Android Views with Material 3 components and
 viewBinding throughout.

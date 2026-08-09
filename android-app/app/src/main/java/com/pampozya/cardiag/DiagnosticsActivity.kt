@@ -16,6 +16,7 @@ import com.pampozya.cardiag.obd.ConnState
 import com.pampozya.cardiag.obd.ObdManager
 import com.pampozya.cardiag.ui.DtcFragment
 import com.pampozya.cardiag.ui.LiveDataFragment
+import com.pampozya.cardiag.ui.ModulesFragment
 import com.pampozya.cardiag.ui.TerminalFragment
 import kotlinx.coroutines.launch
 
@@ -27,6 +28,7 @@ class DiagnosticsActivity : AppCompatActivity() {
         listOf(
             getString(R.string.tab_live_data),
             getString(R.string.tab_trouble_codes),
+            getString(R.string.tab_modules),
             getString(R.string.tab_terminal)
         )
     }
@@ -84,12 +86,13 @@ class DiagnosticsActivity : AppCompatActivity() {
     }
 
     private class DiagnosticsPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
-        override fun getItemCount(): Int = 3
+        override fun getItemCount(): Int = 4
 
         override fun createFragment(position: Int): Fragment {
             return when (position) {
                 0 -> LiveDataFragment()
                 1 -> DtcFragment()
+                2 -> ModulesFragment()
                 else -> TerminalFragment()
             }
         }
